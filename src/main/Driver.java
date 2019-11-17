@@ -66,12 +66,10 @@ public class Driver {
 		frame.add(iv);
 		frame.add(login);	
 		frame.setLayout(null);
-		frame.setResizable(true);
-		frame.setSize(1920, 1080);
+		frame.setResizable(false);
+		frame.setSize(1525, 800);
 		frame.setBackground(new Color(0xf2f5f6));
 		
-		frame.setBounds(0, 0,1920,1080 - 30);
-		frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
 		iv.setVisible(false);
 		frame.setVisible(true);
 	}
@@ -99,7 +97,7 @@ public class Driver {
 	public void connect() {
 		
 		try {
-			FileInputStream serviceAccount = new FileInputStream("C:\\Users\\User\\eclipse-workspace\\_FYP\\service.json");
+			FileInputStream serviceAccount = new FileInputStream("E:\\eclipse-workspace\\_FYP\\service.json");
 			GoogleCredentials credentials = GoogleCredentials.fromStream(serviceAccount);
 			FirebaseOptions options = new FirebaseOptions.Builder()
 				    .setCredentials(credentials)
