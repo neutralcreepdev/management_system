@@ -17,6 +17,7 @@ import javax.swing.BorderFactory;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
@@ -64,13 +65,10 @@ public class TransactionHistoryTable extends JPanel implements MouseListener {
 		table.addMouseListener(this);
 		add(scrollPane);
 
-		
-		DefaultTableCellRenderer leftRenderer = new DefaultTableCellRenderer();
 		DefaultTableCellRenderer middleRenderer = new DefaultTableCellRenderer();
-		leftRenderer.setHorizontalAlignment(SwingConstants.LEFT);
 		middleRenderer.setHorizontalAlignment(SwingConstants.CENTER);
 
-		table.getColumn("Transaction ID").setCellRenderer( leftRenderer );
+		table.getColumn("Transaction ID").setCellRenderer( middleRenderer );
 		table.getColumn("Transaction Date").setCellRenderer( middleRenderer );
 		table.getColumn("Customer Name").setCellRenderer( middleRenderer );
 		table.getColumn("Type").setCellRenderer( middleRenderer);
@@ -92,6 +90,29 @@ public class TransactionHistoryTable extends JPanel implements MouseListener {
 		}); // End of header's mouseListener
 	}
 
+	public double filter(String condition) {
+		double totalAmount = 0.00;
+		ArrayList<TransactionHistory> sortedByMonth = new ArrayList<>();
+	
+		SimpleDateFormat sdf = new SimpleDateFormat("MMM");
+		
+		for (TransactionHistory temp : data) {
+			
+			if (sdf.format(temp.getTransactionDate()).equalsIgnoreCase(condition) ) {
+				//System.out.println("Sorted a date into the list -> " + temp.getTransactionDate());
+				sortedByMonth.add(temp);
+				totalAmount += temp.getAmount();
+			}
+		}
+		
+		if (sortedByMonth.size() <= 0)
+			return -1;
+		else { 
+			updateTable(sortedByMonth);
+			return totalAmount;
+		}
+	}
+	
 	//"Transaction ID", "Transaction Date", "Customer ID", "Type", "Amount"	
 	public void sort(int column) {
 		switch (column) {
@@ -177,9 +198,7 @@ public class TransactionHistoryTable extends JPanel implements MouseListener {
 				dateOfTransactionLabel = new JLabel("Transaction Date: " + parseDateFormal(currTransaction.getTransactionDate()));
 				amountLabel = new JLabel("Amount: " + NumberFormat.getCurrencyInstance().format(currTransaction.getAmount()));
 				transactionID = new JLabel("ID: " + currTransaction.getTransactionID());
-						
-				
-				
+									
 				nameLabel.setBounds		(35, 10, 300, 20);			dateOfTransactionLabel.setBounds	(330, 10, 300, 20);			
 				addressLabel.setBounds	(35, 40, 300, 20);			contactNumberLabel.setBounds		(330, 40, 300, 20);			
 				amountLabel.setBounds	(35, 70, 300, 20);
@@ -194,7 +213,6 @@ public class TransactionHistoryTable extends JPanel implements MouseListener {
 				frame.add(dateOfTransactionLabel);
 				frame.add(amountLabel);
 				frame.add(transactionID);
-				// Add table at the bottom of the frame 
 				frame.add(table);
 				
 				frame.setVisible(true);

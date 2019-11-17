@@ -1,6 +1,8 @@
 package resources;
 
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
@@ -83,6 +85,18 @@ public class TransactionHistory {
 	
 	public void setArray(Object listOfItems) {
 		this.listOfItems = listOfItems;
+	}
+	
+	public boolean isToday() {
+
+		Calendar now = Calendar.getInstance();
+		
+		if (now.getTime().compareTo(transactionDate) == 0 ) {
+			System.out.println("isToday == true");
+			return true;
+		} 
+		
+		return false;
 	}
 	
 	

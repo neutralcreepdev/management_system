@@ -3,20 +3,24 @@ package panels;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.GridLayout;
+import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.text.NumberFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.Properties;
 
 import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JFormattedTextField.AbstractFormatter;
@@ -33,6 +37,8 @@ import org.jdatepicker.impl.UtilDateModel;
 import main.InteractionView;
 import resources.JRoundedTextField;
 import resources.Staff;
+import resources.TransactionHistory;
+import tables.CustomerTransactionTable;
 import tables.DeliveryTable;
 import tables.StaffTable;
 import tables.TransactionHistoryTable;
@@ -90,17 +96,115 @@ public class TaskBar extends JPanel {
 				TransactionHistoryTable thTable = new TransactionHistoryTable(tb);
 
 				JLabel panelLabel = new JLabel("<html><h1>TRANSACTION HISTORY</h1></html>");
+				JLabel monthlyTotal = new JLabel("Total Sales (All): " + NumberFormat.getCurrencyInstance().format(getTotalSales()));
+				monthlyTotal.setBounds(320, 80, 150, 30);
+				ImageIcon searchIcon = new ImageIcon("assets//searchIcon.png");
+				searchIcon = new ImageIcon(searchIcon.getImage().getScaledInstance(30, 30, Image.SCALE_DEFAULT));
+				JButton search = new JButton(searchIcon);
+				search.setBounds(500,80,40,40);
+				
+				search.addActionListener(new ActionListener() {
 
+					@Override
+					public void actionPerformed(ActionEvent arg0) {
+						Object selection = JOptionPane.showInputDialog(mainPanel, "Enter Transaction ID", "Search for a record", JOptionPane.PLAIN_MESSAGE);
+						if ( selection == null ) {
+							System.out.println("Cancel Selected");
+							//Do nothing
+						} else {	
+							boolean resultFound = false;
+							for ( TransactionHistory h : iv.getTransactionHistory() ) {
+								if ( selection.toString().equals(h.getTransactionID())) {
+									JFrame frame = new JFrame("Transaction History for #" + h.getTransactionID());
+									frame.setSize(630, 450);
+									frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+									frame.setLayout(null);
+									
+									CustomerTransactionTable table = new CustomerTransactionTable();
+									table.updateTable(h.getArray());
+									
+									//Create a table here showing customer profile and details
+									JLabel nameLabel, addressLabel, contactNumberLabel, amountLabel, typeLabel, dateOfTransactionLabel, transactionID;
+						
+									nameLabel = new JLabel("Name: " + h.getCustomer().getFirstName() + " " + h.getCustomer().getLastName());
+									
+									if(h.getCustomer().getUnit().isEmpty()) 
+										addressLabel = new JLabel("Address: " + h.getCustomer().getStreet() + " S" + h.getCustomer().getPostal());
+									else 
+										addressLabel = new JLabel("Address: " + h.getCustomer().getStreet() + " #" + h.getCustomer().getUnit() + " S" + h.getCustomer().getPostal());
+									
+									contactNumberLabel = new JLabel("Contact No. : " + h.getCustomer().getContactNumber());
+									typeLabel = new JLabel("Type: " + h.getType());
+									dateOfTransactionLabel = new JLabel("Transaction Date: " + parseDateFormal(h.getTransactionDate()));
+									amountLabel = new JLabel("Amount: " + NumberFormat.getCurrencyInstance().format(h.getAmount()));
+									transactionID = new JLabel("ID: " + h.getTransactionID());
+														
+									nameLabel.setBounds		(35, 10, 300, 20);			dateOfTransactionLabel.setBounds	(330, 10, 300, 20);			
+									addressLabel.setBounds	(35, 40, 300, 20);			contactNumberLabel.setBounds		(330, 40, 300, 20);			
+									amountLabel.setBounds	(35, 70, 300, 20);
+									
+									table.setBounds(5, 150, 600, 250);
+									
+									frame.add(nameLabel);
+									frame.add(addressLabel);
+									frame.add(contactNumberLabel);
+									frame.add(typeLabel);
+									frame.add(dateOfTransactionLabel);
+									frame.add(amountLabel);
+									frame.add(transactionID);
+									frame.add(table);
+									frame.setVisible(true);
+									resultFound = true;
+									
+								}
+							}
+							if ( resultFound == false) 
+								JOptionPane.showMessageDialog(mainPanel, "Transaction record not found!", "Search for a record", JOptionPane.ERROR_MESSAGE);
+						}
+					}
+				});
+					
+				
+				
+				JButton monthlyViewButton = new JButton("<html>View Transaction<br><center>by Month</center></html>");
+				monthlyViewButton.setBounds(90, 80, 150, 50);
+				monthlyViewButton.addActionListener(new ActionListener() {
+
+					@Override
+					public void actionPerformed(ActionEvent arg0) {
+						String [] options = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
+						
+						Object selection = JOptionPane.showInputDialog(mainPanel, "Choose a month", "Monthly Transaction Records", JOptionPane.PLAIN_MESSAGE, null, options, options[0]);
+				        
+						if ( selection == null ) {
+							System.out.println("Cancel Selected");
+							//Do nothing
+						} else {
+							thTable.updateTable(iv.getTransactionHistory());
+							double value = thTable.filter(selection.toString());
+							if ( value < 0)
+								JOptionPane.showMessageDialog(mainPanel, "Selected Month has no records" , "Empty Records", JOptionPane.INFORMATION_MESSAGE);
+							else 
+								monthlyTotal.setText("Total Sales ("+ selection.toString()+"): " + NumberFormat.getCurrencyInstance().format(value));
+						}
+						//need to add in more fake data to show the differences in the list
+					} 
+					
+				});
 				transactionFrame.setSize(600, 650);
 				transactionFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 				transactionFrame.setLayout(null);
+				transactionFrame.setResizable(false);
 
 				thTable.setBorder(BorderFactory.createEtchedBorder());
 				panelLabel.setBounds(160, 30, 300, 25);
-				thTable.setBounds(25, 100, 530, 450);
+				thTable.setBounds(25, 150, 530, 450);
 
 				transactionFrame.add(panelLabel);
 				transactionFrame.add(thTable);
+				transactionFrame.add(monthlyViewButton);
+				transactionFrame.add(monthlyTotal);
+				transactionFrame.add(search);
 
 				transactionFrame.setVisible(true);
 
@@ -166,7 +270,7 @@ public class TaskBar extends JPanel {
 				filterLabel.setBounds(190, 50, 70, 20);
 				filterComboBox.setBounds(240, 50, 150, 20);
 				panelLabel.setBounds(200, 5, 200, 30);
-				table.setBounds(10, 100, 560, 450);
+				table.setBounds(10, 100, 560, 470);
 				table.setBorder(BorderFactory.createEtchedBorder());
 
 				filterComboBox.addItemListener(new filter_IL(table));
@@ -485,6 +589,15 @@ public class TaskBar extends JPanel {
 		return mainPanel;
 	}
 	
+	public double getTotalSales() {
+		double total = 0.00;
+		for ( TransactionHistory h : iv.getTransactionHistory()) {
+			total += h.getAmount();
+		}
+		
+		return total;
+	}
+	
 	//Not in use
 	public String generateNewStaffID() {
 		String id = "" + (Staffs.size());
@@ -499,5 +612,8 @@ public class TaskBar extends JPanel {
 		return id;
 	}
 
+	public String parseDateFormal(Date d) {
+		return new SimpleDateFormat("dd/MM/yyyy hh:mm a").format(d);
+	}
 
 }

@@ -27,6 +27,7 @@ public class StockOrderTable extends JPanel {
 	JTable table;
 	JScrollPane scrollPane;
     List<Grocery> data;
+    //List<Grocery> temp;
     Grocery currGrocery;
     ModelData modelData;
     final JTableHeader header;
@@ -85,10 +86,27 @@ public class StockOrderTable extends JPanel {
 
 	public void updateOrderListGrocery(ArrayList<Grocery> g) {
 		data = g;
+		//temp = g;
 		table.revalidate();
 		table.repaint();
     	
     	System.out.println("Update Stock Order Table");
+	}
+	
+	public void checkAll() {
+		for(Grocery g: data) {
+			g.setReplenishmentStatus(true);
+		}
+		table.revalidate();
+		table.repaint();
+	}
+	
+	public void uncheckAll() {
+		for(Grocery g: data) {
+			g.setReplenishmentStatus(false);
+		}
+		table.revalidate();
+		table.repaint();
 	}
 	
 	//Edit table column width

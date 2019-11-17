@@ -1,10 +1,13 @@
 package main;
 
 import java.awt.Color;
+import java.awt.Font;
 import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.text.NumberFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 
 import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
@@ -19,6 +22,7 @@ import javax.swing.JScrollPane;
 import panels.DeliveryPanel;
 import panels.SearchPanel;
 import panels.TaskBar;
+import panels.TaskBar.ClockListener;
 import resources.Delivery;
 import resources.Grocery;
 import resources.ImageFilter;
@@ -43,6 +47,10 @@ public class InteractionView extends JPanel{
 	Driver driver;
 	JPanel mainPanel = this;
 
+	JLabel dailyTotal = new JLabel("Daily Sales: $0.00");
+	JLabel monthlyTotal = new JLabel("$0.00");
+	javax.swing.Timer dailySalesTimer;
+	
 	public InteractionView (Driver mainDriver) {
 
 		driver = mainDriver;
@@ -52,15 +60,18 @@ public class InteractionView extends JPanel{
 		
 		setLayout(null);
 		refreshButton = new JButton("Refresh Page");
-		refreshButton.setBounds(690, 100, 120, 20);
+		refreshButton.setBounds(690, 120, 120, 20);
 		addStockButton = new JButton("Add New Stock");
-		addStockButton.setBounds(690, 140, 120, 20);
-		importStockDelivery = new JButton("Recieve Stock");
-		importStockDelivery.setBounds(690, 180, 120, 20);
+		addStockButton.setBounds(690, 160, 120, 20);
+		importStockDelivery = new JButton("Receive Stock");
+		importStockDelivery.setBounds(690, 200, 120, 20);
 		urgentStockRequest = new JButton("<html><center>Urgent<br>Stock Ordering</center></html>");
-		urgentStockRequest.setBounds(690, 220, 120, 40);
+		urgentStockRequest.setBounds(690, 240, 120, 40);
 		weeklyStockRequest = new JButton("<html><center>Weekly <br>Stock Ordering</center></html>");
-		weeklyStockRequest.setBounds(690, 280, 120, 40);
+		weeklyStockRequest.setBounds(690, 300, 120, 40);
+
+		dailyTotal.setFont(new Font("sansserif", Font.PLAIN, 20));
+		dailyTotal.setBounds(670, 60, 200, 20);
 		setSize(1525, 800);
 
 		refreshButton.addActionListener(new Refresh_AL());
@@ -68,7 +79,9 @@ public class InteractionView extends JPanel{
 		importStockDelivery.addActionListener(new ImportStock_AL());
 		urgentStockRequest.addActionListener(new UrgentStockRequest_AL());
 		weeklyStockRequest.addActionListener(new WeeklyStockRequest_AL());
-
+		
+		dailySalesTimer = new javax.swing.Timer(20000, new SalesListener());
+		
 		add(refreshButton);
 		add(addStockButton);
 		add(importStockDelivery);
@@ -77,9 +90,10 @@ public class InteractionView extends JPanel{
 		add(sp);
 		add(dp);
 		add(tb);
-
+		add(dailyTotal);
 		setBackground(new Color(0xf2f5f6));
 		setVisible(false);
+
 	}
 
 	public void setView() {
@@ -95,6 +109,7 @@ public class InteractionView extends JPanel{
 	}
 
 	public void logout() {
+		dailySalesTimer.stop();
 		driver.logout();
 	}
 
@@ -144,7 +159,7 @@ public class InteractionView extends JPanel{
 		
 		public void actionPerformed(ActionEvent arg0) {
 			frame = new JFrame("Replenishment System");
-			selected = new JButton("<html>Recieve</html>");
+			selected = new JButton("<html>Receive</html>");
 			JButton view = new JButton("<html>View List</html>");
 
 			frame.setResizable(false);
@@ -163,7 +178,7 @@ public class InteractionView extends JPanel{
 					if ( rt.getSelectedInvoice().getInvoiceNumber().equalsIgnoreCase("0000000000"))
 						JOptionPane.showMessageDialog(mainPanel, "No Replenishment Order Selected!" , "Stock Replenishment", 2);
 					else if (rt.getSelectedInvoice().getStatus().equalsIgnoreCase("Completed"))
-						JOptionPane.showMessageDialog(mainPanel, "Replenishment order already recieved!" , "Stock Replenishment", 2);
+						JOptionPane.showMessageDialog(mainPanel, "Replenishment order already received!" , "Stock Replenishment", 2);
 					else {
 						//Process the changes (Update the values and status in Firebase)
 						driver.processReplenishmentRequest(rt.getSelectedInvoice());
@@ -173,7 +188,7 @@ public class InteractionView extends JPanel{
 							rt.updateTableInvoice(driver.getReplenishmentList());
 							selected.setEnabled(false);
 							
-							JOptionPane.showMessageDialog(mainPanel, "Replenishment Order "+ rt.getSelectedInvoice().getInvoiceNumber() + " has been recieved!" , "Stock Replenishment - Received", 2);
+							JOptionPane.showMessageDialog(mainPanel, "Replenishment Order "+ rt.getSelectedInvoice().getInvoiceNumber() + " has been received!" , "Stock Replenishment - Received", 2);
 						} catch (InterruptedException e1) {
 							e1.printStackTrace();
 						}
@@ -231,10 +246,34 @@ public class InteractionView extends JPanel{
 			solFrame.setLayout(null);
 
 			JButton submit = new JButton("Submit Order");
-			submit.addActionListener(new SubmitOrder_AL(sol, solFrame));
+			JButton selectAll = new JButton("Select All");
+			JButton deSelectAll = new JButton("Unselect All");
+			submit.addActionListener(new SubmitOrder_AL(sol, solFrame, "Normal"));
+			selectAll.addActionListener(new ActionListener() {
+
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					sol.checkAll();					
+				}
+				
+			});
+			deSelectAll.addActionListener(new ActionListener() {
+
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					sol.uncheckAll();					
+				}
+				
+			});
+			
+
+			selectAll.setBounds(350, 450, 147, 20);
+			deSelectAll.setBounds(525, 450, 147, 20);	
 			submit.setBounds(700, 450, 147, 20);
 			sol.setBounds(40, 10 , 810, 430);
-
+			
+			solFrame.add(selectAll);
+			solFrame.add(deSelectAll);
 			solFrame.add(sol);
 			solFrame.add(submit);
 			solFrame.setVisible(true);
@@ -267,12 +306,36 @@ public class InteractionView extends JPanel{
 			solFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 			solFrame.setSize(900, 520);
 			solFrame.setLayout(null);
-
+			JButton selectAll = new JButton("Select All");
+			JButton deSelectAll = new JButton("Unselect All");
 			JButton submit = new JButton("Submit Order");
-			submit.addActionListener(new SubmitOrder_AL(sol, solFrame));
+			submit.addActionListener(new SubmitOrder_AL(sol, solFrame, "Urgent"));	
+			selectAll.addActionListener(new ActionListener() {
+
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					sol.checkAll();					
+				}
+				
+			});
+			deSelectAll.addActionListener(new ActionListener() {
+
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					sol.uncheckAll();					
+				}
+				
+			});
+			
+
+			selectAll.setBounds(350, 450, 147, 20);
+			deSelectAll.setBounds(525, 450, 147, 20);	
+
+			
 			submit.setBounds(700, 450, 147, 20);
 			sol.setBounds(40, 10 , 810, 430);
-
+			solFrame.add(selectAll);
+			solFrame.add(deSelectAll);
 			solFrame.add(sol);
 			solFrame.add(submit);
 			solFrame.setVisible(true);
@@ -283,21 +346,24 @@ public class InteractionView extends JPanel{
 
 		StockOrderTable sol;
 		JFrame frame;
-		public SubmitOrder_AL(StockOrderTable s, JFrame f) { 
+		String status;
+		public SubmitOrder_AL(StockOrderTable s, JFrame f, String status) { 
 			sol = s;
 			frame = f;
+			this.status = status;
 		}
 
 		public void actionPerformed(ActionEvent arg0) {
 			//Send the SOL to Driver class to upload to "Request Stock" Collections
 			ArrayList<Grocery> toOrderList = new ArrayList<>();
 
-			for (Grocery g : sol.getOrderList())
+			for (Grocery g : sol.getOrderList()) {
 				if(g.getReplenishmentStatus() == true)
 					toOrderList.add(g);
-
+			}
+			
 			if(toOrderList.size() > 0) {
-				String invoiceNo = driver.sendReplenishmentRequest(toOrderList);
+				String invoiceNo = driver.sendReplenishmentRequest(toOrderList, status);
 				JOptionPane.showMessageDialog(mainPanel, "Order has been successfully posted!" , "Posting Successful for #" + invoiceNo , 2);	
 				frame.dispose();
 			} else 
@@ -334,6 +400,7 @@ public class InteractionView extends JPanel{
 			JButton imageSelector = new JButton("Select Image");
 			JButton deleteImage = new JButton("X");
 			submit.setBackground(new Color(0x0cb004));
+			submit.setBorder(BorderFactory.createLineBorder(Color.BLACK));
 			deleteImage.setForeground(Color.RED);
 
 			nameLabel = new JLabel("Name: ");
@@ -359,7 +426,6 @@ public class InteractionView extends JPanel{
 
 			imageSelector.addActionListener(new ActionListener() {
 
-				//Add a remove button here
 				@Override
 				public void actionPerformed(ActionEvent arg0) {
 					if(imagePath.isEmpty() == false) {
@@ -387,13 +453,110 @@ public class InteractionView extends JPanel{
 
 				@Override
 				public void actionPerformed(ActionEvent arg0) {
+					imagePath = "";
 					imagePreviewPanel.removeAll();
 					imagePreviewPanel.repaint();
 					imagePreviewPanel.revalidate();
+					
 				}
 				
 			});
-			submit.addActionListener(new submit_AL(addNewStock));
+			submit.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+
+					//Error Handle the information
+					boolean duplicateCheck = false, price_numberFormatError = false, qty_numberFormatError = false;
+					boolean nameFieldStatus = false, suppFieldStatus = false, qtyFieldStatus = false, priceFieldStatus = false , descFieldStatus = false;
+					boolean replenishmentStatus = false;
+					boolean categoryStatus = false;
+					double p = 0.00;
+					long q = 0;
+
+					//Check if the textbox is empty
+					//Error handling is to check against a name and a supplier for duplicates
+
+					if(name.getText().trim().isEmpty() == true)
+						nameFieldStatus = true;
+
+					if(supplier.getText().trim().isEmpty() == true)
+						suppFieldStatus = true;
+
+					if(qty.getText().trim().isEmpty() == true)
+						qtyFieldStatus = true;
+
+					if(price.getText().trim().isEmpty() == true)
+						priceFieldStatus = true;
+
+					if(area.getText().trim().isEmpty() == true)
+						descFieldStatus = true;
+					
+					if(category.getText().trim().isEmpty() == true)
+						categoryStatus = true;
+					
+					try {
+						q = Long.parseLong(qty.getText().trim());
+						if ( q > 50 )
+							replenishmentStatus = false;
+						else if ( q >= 0 && q < 50)
+							replenishmentStatus = true;
+						else {
+							JOptionPane.showMessageDialog(mainPanel, "Quantity cannot be less than 0" , "Add New Stock", 2);
+							qty_numberFormatError = true;
+						}
+					} catch (NumberFormatException e1) {
+						qty_numberFormatError = true;
+					}
+
+					try {
+						p = Double.parseDouble(price.getText().trim());
+
+						if(p < 0) {
+							JOptionPane.showMessageDialog(mainPanel, "Price cannot be less than 0" , "Add New Stock", 2);
+							price_numberFormatError = true;
+						}
+					} catch (NumberFormatException e1) {
+						price_numberFormatError = true;
+					}
+
+					if( nameFieldStatus == true|| suppFieldStatus == true || qtyFieldStatus == true || priceFieldStatus == true || descFieldStatus == true || categoryStatus == true)
+						JOptionPane.showMessageDialog(mainPanel, "1 or more fields are empty" , "Add New Stock", 2);
+					else if (price_numberFormatError == true)
+						JOptionPane.showMessageDialog(mainPanel, "ERROR! - Price is not a decimal number or an Invalid Character Detected" , "Add New Stock", 0);	
+					else if (qty_numberFormatError == true)
+						JOptionPane.showMessageDialog(mainPanel, "ERROR! - Quantity cannot be a decimal or an Invalid Character Detected" , "Add New Stock", 0);
+					else if(p < 0.01)
+						JOptionPane.showMessageDialog(mainPanel, "Price cannot be less than $0.01" , "Add New Stock", 0);
+					else {
+						for ( Grocery g: Groceries) {
+							if ( g.getName().equalsIgnoreCase(name.getText().trim()) && g.getSupplier().equalsIgnoreCase(supplier.getText().trim()))
+								duplicateCheck = true;
+						}
+
+						if(duplicateCheck == false) {
+							//Default Image URL
+							if (imagePath.isEmpty() == true)
+								JOptionPane.showMessageDialog(mainPanel, "Please add a picture for grocery!" , "Add New Stock - Add Picture", 0);
+							else {
+
+								//Generate new Grocery ID function
+								Grocery g = new Grocery(name.getText(), supplier.getText(), generateNewGroceryID(), q, p, "", area.getText(),  replenishmentStatus, "Others" );
+								
+								//Run the GCS METHOD
+								g.setImageUrl(driver.storeImageToGCS(g.getName() + ".jpg", imagePath));
+								driver.addGrocery(g);
+								imagePath = "";
+								//Subsequently refresh SearchPanel and  SearchTable
+								driver.readData();
+								sp.updateTable(driver.getGrocery());
+								addNewStock.dispose();
+							}
+
+						} else
+							JOptionPane.showMessageDialog(mainPanel, "Duplicate product!" , "Add New Stock", 0);
+					}
+
+				}
+			});
 			
 			
 			nameLabel.setBounds			(20, 15, 100, 20);			name.setBounds			(95, 10, 170, 30);
@@ -428,108 +591,6 @@ public class InteractionView extends JPanel{
 			addNewStock.setVisible(true);
 
 		}
-		class submit_AL implements ActionListener {
-			JFrame frame;
-
-			public submit_AL(JFrame temp) {
-				frame = temp;
-			}
-
-			public void actionPerformed(ActionEvent e) {
-
-				//Error Handle the information
-				boolean duplicateCheck = false, price_numberFormatError = false, qty_numberFormatError = false;
-				boolean nameFieldStatus = false, suppFieldStatus = false, qtyFieldStatus = false, priceFieldStatus = false , descFieldStatus = false;
-				boolean replenishmentStatus = false;
-				boolean categoryStatus = false;
-				double p = 0.00;
-				long q = 0;
-
-				//Check if the textbox is empty
-				//Error handling is to check against a name and a supplier for duplicates
-
-				if(name.getText().trim().isEmpty() == true)
-					nameFieldStatus = true;
-
-				if(supplier.getText().trim().isEmpty() == true)
-					suppFieldStatus = true;
-
-				if(qty.getText().trim().isEmpty() == true)
-					qtyFieldStatus = true;
-
-				if(price.getText().trim().isEmpty() == true)
-					priceFieldStatus = true;
-
-				if(area.getText().trim().isEmpty() == true)
-					descFieldStatus = true;
-				
-				if(category.getText().trim().isEmpty() == true)
-					categoryStatus = true;
-				
-				try {
-					q = Long.parseLong(qty.getText().trim());
-					if ( q > 50 )
-						replenishmentStatus = false;
-					else if ( q >= 0 && q < 50)
-						replenishmentStatus = true;
-					else {
-						JOptionPane.showMessageDialog(mainPanel, "Quantity cannot be less than 0" , "Add New Stock", 2);
-						qty_numberFormatError = true;
-					}
-				} catch (NumberFormatException e1) {
-					qty_numberFormatError = true;
-				}
-
-				try {
-					p = Double.parseDouble(price.getText().trim());
-
-					if(p < 0) {
-						JOptionPane.showMessageDialog(mainPanel, "Price cannot be less than 0" , "Add New Stock", 2);
-						price_numberFormatError = true;
-					}
-				} catch (NumberFormatException e1) {
-					price_numberFormatError = true;
-				}
-
-				if( nameFieldStatus == true|| suppFieldStatus == true || qtyFieldStatus == true || priceFieldStatus == true || descFieldStatus == true || categoryStatus == true)
-					JOptionPane.showMessageDialog(mainPanel, "1 or more fields are empty" , "Add New Stock", 2);
-				else if (price_numberFormatError == true)
-					JOptionPane.showMessageDialog(mainPanel, "ERROR! - Price is not a decimal number or an Invalid Character Detected" , "Add New Stock", 0);	
-				else if (qty_numberFormatError == true)
-					JOptionPane.showMessageDialog(mainPanel, "ERROR! - Quantity cannot be a decimal or an Invalid Character Detected" , "Add New Stock", 0);
-				else if(p < 0.01)
-					JOptionPane.showMessageDialog(mainPanel, "Price cannot be less than $0.01" , "Add New Stock", 0);
-				else {
-					for ( Grocery g: Groceries) {
-						if ( g.getName().equalsIgnoreCase(name.getText().trim()) && g.getSupplier().equalsIgnoreCase(supplier.getText().trim()))
-							duplicateCheck = true;
-					}
-
-					if(duplicateCheck == false) {
-						//Default Image URL
-						if (imagePath.isEmpty() == true)
-							JOptionPane.showMessageDialog(mainPanel, "Please add a picture for grocery!" , "Add New Stock - Add Picture", 0);
-						else {
-
-							//Generate new Grocery ID function
-							Grocery g = new Grocery(name.getText(), supplier.getText(), generateNewGroceryID(), q, p, "", area.getText(),  replenishmentStatus, "Others" );
-							
-							//Run the GCS METHOD
-							g.setImageUrl(driver.storeImageToGCS(g.getName() + ".jpg", imagePath));
-							driver.addGrocery(g);
-							//Subsequently refresh SearchPanel and  SearchTable
-							driver.readData();
-							sp.updateTable(driver.getGrocery());
-							frame.dispose();
-						}
-
-					} else
-						JOptionPane.showMessageDialog(mainPanel, "Duplicate product!" , "Add New Stock", 0);
-				}
-
-			}
-
-		}	
 	}	
 	
 	public String uploadImagetoGCS(String fileName,String filePath) {
@@ -592,7 +653,27 @@ public class InteractionView extends JPanel{
 	public ArrayList<TransactionHistory> getTransactionHistory() {
 		return driver.getTransactionHistory();
 	}
+	
+	public class SalesListener implements ActionListener {
+		public void actionPerformed(ActionEvent e) {
+			double dailyAmount = 0.0;
+			
+			for(TransactionHistory h : driver.getTransactionHistory()) {
+				if ( h.isToday() == true) {
+					dailyAmount += h.getAmount();
+				}
+			}
+			dailyTotal.setText("Daily Sales: " + NumberFormat.getCurrencyInstance().format(dailyAmount));
+			System.out.println("Updates Daily Sales Figure");
 
+		}
+	}
+	
+	public void startDailySales() {
+		dailySalesTimer.start();
+	}
+	
+	
 	public JPanel getMainPanel() {
 		return mainPanel;
 	}

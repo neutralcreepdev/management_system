@@ -39,7 +39,7 @@ public class SearchPanel extends JPanel {
 		table = new SearchTable(this);
 		
 		setLayout(null);
-		setBounds(850, 75, 610, 600);
+		setBounds(850, 100, 610, 600);
 		setBorder(BorderFactory.createEtchedBorder());
 		setBackground(new Color(0xf2f5f6));
 		

@@ -3,6 +3,7 @@ package tables;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -43,16 +44,16 @@ public class ViewReplenishmentTable extends JPanel {
 			add(scrollPane);
 			
 			
-			DefaultTableCellRenderer leftRenderer = new DefaultTableCellRenderer();
-			leftRenderer.setHorizontalAlignment(SwingConstants.LEFT);
+			DefaultTableCellRenderer middleRenderer = new DefaultTableCellRenderer();
+			middleRenderer.setHorizontalAlignment(SwingConstants.CENTER);
 
 			table.setBackground(new Color(0xdaddd8));
 			scrollPane.getViewport().setBackground(new Color(0xf2f5f6));
 			
-			table.getColumn("Name").setCellRenderer( leftRenderer );
-			table.getColumn("Quantity").setCellRenderer( leftRenderer );
-			table.getColumn("Price").setCellRenderer(leftRenderer);
-			table.getColumn("Supplier").setCellRenderer(leftRenderer);
+			table.getColumn("Name").setCellRenderer( middleRenderer );
+			table.getColumn("Quantity").setCellRenderer( middleRenderer );
+			table.getColumn("Price").setCellRenderer(middleRenderer);
+			table.getColumn("Supplier").setCellRenderer(middleRenderer);
 			
 			table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
 			
@@ -102,8 +103,12 @@ public class ViewReplenishmentTable extends JPanel {
 		    	for (int i = 0; i < data.size(); i++) {
 		    		String[] temp = data.get(i).split("\\|");
 		    	
-		    		if (i == rowIndex)
-		    			return temp[columnIndex];
+		    		if (i == rowIndex) {
+		    			if ( columnIndex ==  2)
+		    				return NumberFormat.getCurrencyInstance().format(Double.parseDouble(temp[columnIndex]));
+		    			else
+		    				return temp[columnIndex];
+		    		}
 		    	}
 		    	
 		      return null;

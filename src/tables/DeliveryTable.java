@@ -32,9 +32,7 @@ import comparators.DeliverySortByCustomerName;
 import comparators.DeliverySortByDeliveryDate;
 import comparators.DeliverySortByEmployeeName;
 import comparators.DeliverySortByStatus;
-import panels.DeliveryPanel;
 import resources.Delivery;
-import resources.Staff;
 
 //http://www.java2s.com/Tutorial/Java/0240__Swing/CustomizingColumnHeaderswithIcons.htm
 

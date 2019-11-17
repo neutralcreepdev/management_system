@@ -9,21 +9,24 @@ public class Invoice {
 	String invoiceNumber, status, docID;
 	ArrayList<String> replenishmentList;
 	Date date;
+	String deliveryType;
 	public Invoice() {
 		replenishmentList = new ArrayList<>();
 		invoiceNumber = "0000000000";
 		status = "Unknown";
 		date = new Date();
 		docID = "";
+		deliveryType = "";
 	}
 	
 	@SuppressWarnings("unchecked")
-	public Invoice(String invoiceNo, String stat, Object list, Timestamp date, String docID) {
+	public Invoice(String invoiceNo, String stat, Object list, Timestamp date, String docID, String deliveryType) {
 		replenishmentList = ( ArrayList<String> ) list;
 		invoiceNumber = invoiceNo;
 		status = stat;
 		this.date = date.toDate();
 		this.docID = docID;
+		this.deliveryType = deliveryType;
 	}
 
 	public String getInvoiceNumber() {
@@ -54,6 +57,10 @@ public class Invoice {
 	}
 	public String getDocID() {
 		return docID;
+	}
+	
+	public String getDeliveryType() {
+		return deliveryType;
 	}
 	
 	

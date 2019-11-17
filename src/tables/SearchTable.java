@@ -299,9 +299,138 @@ public class SearchTable extends JPanel implements MouseListener {
 					imagePreviewPanel.revalidate();		
 				}
 								
-				update.addActionListener(new update_AL(frame));
-				delete.addActionListener(new delete_AL(frame));
-				generateQR.addActionListener(new generateQR_AL());
+				update.addActionListener(new ActionListener() {
+					String url = "";				
+					public void actionPerformed(ActionEvent e) {
+						boolean imageEmpty = false;
+						boolean priceIsPositive = false;
+						boolean qtyIsPositive = false;
+						Grocery temp = new Grocery();		
+					
+						int fieldChecker = 0;
+						
+						//Check if the textbox is empty
+						// If empty == true Then set to default (old) value
+						// Else set to the new updated value
+						try {
+						if(name.getText().trim().isEmpty() == true) {
+							fieldChecker++;
+							temp.setName(currGrocery.getName());
+						} else
+							temp.setName(name.getText());	
+						
+						if(supplier.getText().trim().isEmpty() == true) {
+							fieldChecker++;
+							temp.setSupplier(currGrocery.getSupplier());
+						} else 
+							temp.setSupplier(supplier.getText());
+						
+						if(qty.getText().trim().isEmpty() == true) {
+							fieldChecker++;
+							temp.setQuantity(currGrocery.getQuantity());
+							qtyIsPositive = true;
+						} else {
+							if (Long.parseLong(qty.getText()) < 0)
+								qtyIsPositive = false;
+							else {
+								temp.setQuantity(Long.parseLong(qty.getText()));
+								qtyIsPositive = true;
+							}
+						}
+						if(price.getText().trim().isEmpty() == true) {
+							fieldChecker++;
+							temp.setPrice(currGrocery.getPrice());
+							priceIsPositive = true;
+						} else {
+							if ( Double.parseDouble(price.getText()) < 0.01)
+								priceIsPositive = false;
+							else {
+								temp.setPrice(Double.parseDouble(price.getText()));
+								priceIsPositive = true;
+							}
+						}
+						
+						if(area.getText().trim().isEmpty() == true) {
+							fieldChecker++;
+							temp.setDescription(currGrocery.getDescription());
+						} else
+							temp.setDescription(area.getText());
+
+						//if ImageURL is different, Run a Image Uploader here and retrieve URL first before commiting to the update function
+						if(currGrocery.getImageURL().equalsIgnoreCase(imagePath) == false) {
+								
+							url = sp.uploadImagetoGCS(temp.getName() + randomNumberGenerator() + ".jpg", imagePath);
+							System.out.println("New url for image = " + url);
+							fieldChecker--; // If Use case is to replace image, then this will enable it		
+						} else
+							url = currGrocery.getImageURL();  //if same then ignore.
+						
+						
+						if( fieldChecker == 5) {
+							if(imageEmpty == false)
+								JOptionPane.showMessageDialog(frame, "Fields are empty" , "Updating Stock", 2);							
+						} else if (qtyIsPositive == false) {
+							JOptionPane.showMessageDialog(frame, "Quantity cannot be below 0" , "Updating Stock", 2);
+						} else if (priceIsPositive == false) {
+							JOptionPane.showMessageDialog(frame, "Price of Stock cannot be less than $0.01" , "Updating Stock", 2);	
+						} else {
+						
+							//Function to compare the difference between the objects
+							if( compare(temp, frame) == false)
+								JOptionPane.showMessageDialog(frame, "No Changes Detected - No update executed" , "Updating Stock", 2);
+							else {
+								
+								//Remaining Fields that has not been added to the Grocery Object
+								temp.setItemID(currGrocery.getItemID());
+								temp.setCategory(currGrocery.getCategory());
+								temp.setImageUrl(url);
+								
+								sp.updateStock(temp, currGrocery);
+				
+								frame.dispose();
+								
+								try {
+									Thread.sleep(1500);
+									sp.updateTable();
+								} catch (InterruptedException e1) {
+									System.out.println("Update Stock Caught an InterruptedException - SearchTable/SearchPanel/Update_AL");
+								}
+								
+							}
+						}
+					} catch (NumberFormatException ee) {
+						JOptionPane.showMessageDialog(frame, "Value of Quantity or Price must be a positive number" , "Updating Stock", 2);
+						}
+					}
+				});
+				
+				//Send a Delete Request To Firestore
+				//Table Update is handled by InteractionView
+				delete.addActionListener(new ActionListener() {
+					
+					public void actionPerformed(ActionEvent e) {
+						sp.deleteStock(currGrocery);
+						frame.dispose();
+						sp.updateTable();
+					}
+				});
+				generateQR.addActionListener(new ActionListener() {
+					@Override
+					public void actionPerformed(ActionEvent arg0) {
+
+						  String qrCodeText = currGrocery.getItemID() + ":" + currGrocery.getName() + ":" + currGrocery.getDescription() + ":" + currGrocery.getSupplier() + ":" + currGrocery.getPrice() + ":" + currGrocery.getImageURL();
+						  String filePath = "QRCodes\\" + currGrocery.getName() + ".png";
+						  int size = 125;
+						  String fileType = "png";
+						  File qrFile = new File(filePath);
+						  try {
+							createQRImage(qrFile, qrCodeText, size, fileType);
+						} catch (WriterException | IOException e) {
+							JOptionPane.showMessageDialog(mainPanel, "Error generating the QR Code, please contact Technical Support for assistance", "Generation Error", 0, null);
+						}
+						  JOptionPane.showMessageDialog(mainPanel, "QR Code Image Stored at \"" + filePath + "\"", "Generation Success", 1, null);
+					}
+				});
 				imageSelector.addActionListener(new ActionListener() {
 	
 					@Override
@@ -397,141 +526,16 @@ public class SearchTable extends JPanel implements MouseListener {
 				frame.add(delete);
 				frame.add(generateQR);
 				
-				//frame.setAlwaysOnTop(true);	
 				frame.setVisible(true);
-	
-				} catch ( ArrayIndexOutOfBoundsException e1) {
-						
-				} catch (IOException e1) {
-					System.out.println("Image URL invalid - SearchTable/SearchPanel/mousePressed");
-				}
 				
+			} catch ( ArrayIndexOutOfBoundsException e1) {
+					
+			} catch (IOException e1) {
+				System.out.println("Image URL invalid - SearchTable/SearchPanel/mousePressed");
+			}		
 		}
 	}
-	class generateQR_AL implements ActionListener {
-
-		@Override
-		public void actionPerformed(ActionEvent arg0) {
-
-			  String qrCodeText = currGrocery.getItemID() + ":" + currGrocery.getName() + ":" + currGrocery.getDescription() + ":" + currGrocery.getSupplier() + ":" + currGrocery.getPrice() + ":" + currGrocery.getImageURL();
-			  String filePath = "QRCodes\\" + currGrocery.getName() + ".png";
-			  int size = 125;
-			  String fileType = "png";
-			  File qrFile = new File(filePath);
-			  try {
-				createQRImage(qrFile, qrCodeText, size, fileType);
-			} catch (WriterException | IOException e) {
-				JOptionPane.showMessageDialog(mainPanel, "Error generating the QR Code, please contact Technical Support for assistance", "Generation Error", 0, null);
-			}
-			  JOptionPane.showMessageDialog(mainPanel, "QR Code Image Stored at \"" + filePath + "\"", "Generation Success", 1, null);
-		}	
-	}
 	
-	class update_AL implements ActionListener {
-		JFrame frame;
-		String url = "";
-			
-		public update_AL(JFrame jtemp) {
-			frame = jtemp;
-		}
-			
-		public void actionPerformed(ActionEvent e) {
-			boolean imageEmpty = false;
-			Grocery temp = new Grocery();		
-		
-			int fieldChecker = 0;
-			
-			//Check if the textbox is empty
-			// If empty == true Then set to default (old) value
-			// Else set to the new updated value
-			if(name.getText().trim().isEmpty() == true) {
-				fieldChecker++;
-				temp.setName(currGrocery.getName());
-			} else
-				temp.setName(name.getText());	
-			
-			if(supplier.getText().trim().isEmpty() == true) {
-				fieldChecker++;
-				temp.setSupplier(currGrocery.getSupplier());
-			} else 
-				temp.setSupplier(supplier.getText());
-			
-			if(qty.getText().trim().isEmpty() == true) {
-				fieldChecker++;
-				temp.setQuantity(currGrocery.getQuantity());
-			} else 
-				temp.setQuantity(Long.parseLong(qty.getText()));
-			
-			if(price.getText().trim().isEmpty() == true) {
-				fieldChecker++;
-				temp.setPrice(currGrocery.getPrice());
-			} else 
-				temp.setPrice(Double.parseDouble(price.getText()));
-			
-			if(area.getText().trim().isEmpty() == true) {
-				fieldChecker++;
-				temp.setDescription(currGrocery.getDescription());
-			} else
-				temp.setDescription(area.getText());
-			
-
-			//if ImageURL is different, Run a Image Uploader here and retrieve URL first before commiting to the update function
-			if(currGrocery.getImageURL().equalsIgnoreCase(imagePath) == false) {
-					
-				url = sp.uploadImagetoGCS(temp.getName() + randomNumberGenerator() + ".jpg", imagePath);
-				System.out.println("New url for image = " + url);
-				fieldChecker--; // If Use case is to replace image, then this will enable it		
-			} else
-				url = currGrocery.getImageURL();  //if same then ignore.
-			
-			
-			if( fieldChecker == 5) {
-				if(imageEmpty == false)
-					JOptionPane.showMessageDialog(frame, "Fields are empty" , "Updating Stock", 2);
-				
-			} else {
-			
-				//Function to compare the difference between the objects
-				if( compare(temp, frame) == false)
-					JOptionPane.showMessageDialog(frame, "No Changes Detected - No update executed" , "Updating Stock", 2);
-				else {
-					
-					//Remaining Fields that has not been added to the Grocery Object
-					temp.setItemID(currGrocery.getItemID());
-					temp.setCategory(currGrocery.getCategory());
-					temp.setImageUrl(url);
-					
-					sp.updateStock(temp, currGrocery);
-	
-					frame.dispose();
-					
-					try {
-						Thread.sleep(1500);
-						sp.updateTable();
-					} catch (InterruptedException e1) {
-						System.out.println("Update Stock Caught an InterruptedException - SearchTable/SearchPanel/Update_AL");
-					}
-					
-				}
-			}
-		}
-	}
-
-	class delete_AL implements ActionListener {
-		JFrame frame;
-		
-		public delete_AL(JFrame temp) {
-			frame = temp;
-		}
-				
-		public void actionPerformed(ActionEvent e) {
-			//Send a Delete Request To Firestore
-			//Table Update is handled by InteractionView
-			sp.deleteStock(currGrocery);
-			frame.dispose();
-			sp.updateTable();
-		}
-	}		
 	
 	public void mouseReleased(MouseEvent e) {}
 	public void mouseEntered(MouseEvent e)  {}
@@ -543,7 +547,7 @@ public class SearchTable extends JPanel implements MouseListener {
 		return "" + a.nextInt(1000);
 	}
 	
-	/* Conditions for Comparision
+	/* Conditions for Comparison
 	 * name, supplier, description is fine to be the same in different casing
 	 * itemID must be the same
 	 * quantity and price can be the same
@@ -568,8 +572,6 @@ public class SearchTable extends JPanel implements MouseListener {
 		//Price
 		if (currGrocery.getPrice() == newGrocery.getPrice() )
 			sameCounter++;
-		else if (newGrocery.getPrice() < 0.01)
-			JOptionPane.showMessageDialog(frame, "Price cannot be less than $0.01 - No update executed" , "Updating Stock", 2);
 		
 		//Return statement on the function
 		if (sameCounter == 5) 	

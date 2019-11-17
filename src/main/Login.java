@@ -47,7 +47,7 @@ public class Login extends JPanel {
 		setLayout(null);
 		mainPanel.setBorder(BorderFactory.createLineBorder(Color.black));
 		//Set background image
-		ImageIcon icon = new ImageIcon("src//images//Supermarket3.jpg");
+		ImageIcon icon = new ImageIcon("assets//Supermarket3.jpg");
 		icon = new ImageIcon(icon.getImage().getScaledInstance(1525, 800, Image.SCALE_DEFAULT));
 		JLabel backgroundImage = new JLabel(icon);
 				
@@ -148,8 +148,8 @@ public class Login extends JPanel {
 			char[] input = password.getPassword();
 			
 			try {
-				File file = new File("src\\resources\\passwd.dat");
-				File file2 = new File("src\\resources\\shadow.dat");
+				File file = new File("assets//passwd.dat");
+				File file2 = new File("assets//shadow.dat");
 				String hashPW = read(file);
 				String salt = read(file2);
 

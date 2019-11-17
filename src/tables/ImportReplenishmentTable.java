@@ -56,15 +56,16 @@ public class ImportReplenishmentTable extends JPanel implements MouseListener {
 			add(scrollPane);
 			
 			
-			DefaultTableCellRenderer leftRenderer = new DefaultTableCellRenderer();
-			leftRenderer.setHorizontalAlignment(SwingConstants.LEFT);
+			DefaultTableCellRenderer middleRenderer = new DefaultTableCellRenderer();
+			middleRenderer.setHorizontalAlignment(SwingConstants.CENTER);
 
 			table.setBackground(new Color(0xdaddd8));
 			scrollPane.getViewport().setBackground(new Color(0xf2f5f6));
 			
-			table.getColumn("Date").setCellRenderer( leftRenderer );
-			table.getColumn("Invoice No").setCellRenderer( leftRenderer );
-			table.getColumn("Status").setCellRenderer(leftRenderer);
+			table.getColumn("Date").setCellRenderer( middleRenderer );
+			table.getColumn("Invoice No").setCellRenderer( middleRenderer );
+			table.getColumn("Status").setCellRenderer(middleRenderer);
+			table.getColumn("Request Type").setCellRenderer(middleRenderer);
 			
 			table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
 			
@@ -136,8 +137,8 @@ public class ImportReplenishmentTable extends JPanel implements MouseListener {
 		//Edit table column width
 		class ModelData extends AbstractTableModel {
 
-			String colNames[] = {"Date", "Invoice No", "Status"};
-		    Class<?> colClasses[] = { Date.class, String.class , String.class };
+			String colNames[] = {"Date", "Invoice No", "Status", "Request Type"};
+		    Class<?> colClasses[] = { Date.class, String.class , String.class, String.class };
 
 		    //Constructor
 		    public ModelData() {
@@ -164,6 +165,7 @@ public class ImportReplenishmentTable extends JPanel implements MouseListener {
 		    	case 0: return parseDateSimple(data.get(rowIndex).getDate());
 		    	case 1: return data.get(rowIndex).getInvoiceNumber();
 		    	case 2: return data.get(rowIndex).getStatus();
+		    	case 3: return data.get(rowIndex).getDeliveryType();
 		    	
 		    	default:   return null;
 		        }

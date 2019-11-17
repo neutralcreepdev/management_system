@@ -1,4 +1,4 @@
-//import javax.swing.SwingUtilities;
+import javax.swing.SwingUtilities;
 
 import main.Driver;
 
@@ -16,13 +16,18 @@ public class NeutralCreep {
 	
 	public static void main(String [] args) {
 
-		//SwingUtilities.invokeLater(new Runnable() {
-		   // @Override
-		    //public void run() {
+		
+		NeutralCreep nc = new NeutralCreep();
+		nc.execute();
+
+		
+		/*SwingUtilities.invokeLater(new Runnable() {
+		    @Override
+		    public void run() {
 				NeutralCreep nc = new NeutralCreep();
 				nc.execute();
-		  //  }
-		//});
+		    }
+		});*/
 	}
 	
 }

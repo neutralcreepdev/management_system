@@ -12,7 +12,6 @@ import javax.swing.JPanel;
 
 import main.InteractionView;
 import resources.Delivery;
-import resources.Staff;
 import tables.DeliveryTable;
 
 //Should sort by date intially
@@ -30,7 +29,7 @@ public class DeliveryPanel extends JPanel {
 		table = new DeliveryTable(iv.getMainPanel());
 		
 		setLayout(null);
-		setBounds(50, 75, 610, 600);
+		setBounds(50, 100, 610, 600);
 		setBorder(BorderFactory.createEtchedBorder());
 		setBackground(new Color(0xf2f5f6));
 		

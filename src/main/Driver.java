@@ -6,13 +6,10 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.InetAddress;
 import java.net.URL;
 import java.net.URLConnection;
-import java.net.UnknownHostException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
@@ -24,8 +21,6 @@ import java.util.concurrent.ExecutionException;
 
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
-import javax.swing.SwingUtilities;
-
 import com.google.api.core.ApiFuture;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.Timestamp;
@@ -81,9 +76,9 @@ public class Driver {
 	final static String c_STOCK_DELIVERY = "Stock Delivery";
 	final static String c_TRANSACTION_HISTORY = "Orders";
 	final static String c_CUSTOMERS = "users";
-	final static String FIREBASE_SERVICE = "src\\resources\\service.json";
+	final static String FIREBASE_SERVICE = "assets//service.json";
 	String text;
-	
+
 	public Driver() {
 		
 		frame = new JFrame();
@@ -117,6 +112,7 @@ public class Driver {
 		frame.revalidate();
 		checkGroceryQty();
 		gcs.connect();
+		iv.startDailySales();
 	}
 	
 	public void logout() {
@@ -143,7 +139,6 @@ public class Driver {
 			System.out.println("Established a connection to firestore...");
 			login.updateStatus(1);
 		} catch (IOException e) {
-
 			e.printStackTrace();
 		}
 	}
@@ -262,9 +257,6 @@ public class Driver {
 			UserRecord userRecord = FirebaseAuth.getInstance().createUser(request);
 			System.out.println("Successfully created new user: " + userRecord.getUid());
 			s.setUID(userRecord.getUid());
-			
-			//Consider using a thread to handle the email portion for quick GUI Response
-			new EmailSender(s.getEmail(), "<123456>").send();
 			
 			JOptionPane.showMessageDialog(null, "Profile Created" , "Add New Staff", 1);
 	
@@ -485,7 +477,7 @@ public class Driver {
 			List<QueryDocumentSnapshot> documents = querySnapshot.getDocuments();
 			
 			for (DocumentSnapshot document : documents) {
-				 Invoice i = new Invoice(document.getString("Invoice Number"), document.getString("Status"), document.get("Replenishment List") , document.getTimestamp("Creation Date"), document.getId());
+				 Invoice i = new Invoice(document.getString("Invoice Number"), document.getString("Status"), document.get("Replenishment List") , document.getTimestamp("Creation Date"), document.getId(), document.getString("Delivery Request Type"));
 				 Invoices.add(i);
 			}
 		} catch (InterruptedException | ExecutionException e) {
@@ -550,12 +542,13 @@ public class Driver {
 												(Map<String,String>)document.get("address"),
 												document.getDouble("totalAmount"),
 												document.get("items"));
-					temp.setFormattedDateToOrdinaryDateObject((Map<Object, Object>)document.get("expectedTime"), "expectedTime");
+					//temp.setFormattedDateToOrdinaryDateObject((Map<Object, Object>)document.get("expectedTime"), "expectedTime");
+					temp.setFormattedDateToOrdinaryDateObject((Map<Object, Object>)document.get("timeArrival"), "expectedTime");
 					temp.setEmployeeName(retrieveEmployeeObjectForDelivery(document.getString("employeeId")));
 					pendingDeliveries.add(temp);
 					pendingAssignedDeliveriesCounter++;
 			}
-			//System.out.println("Assigned Pending Deliveries = " + pendingAssignedDeliveriesCounter);
+			System.out.println("Assigned Pending Deliveries = " + pendingAssignedDeliveriesCounter);
 			
 			//Single Query to Collection - Delivery to populate the Deliveries not picked up by the delivery staff
 			ApiFuture<QuerySnapshot> queryDelivery = db.collection(c_DELIVERIES).get();
@@ -582,7 +575,7 @@ public class Driver {
 					pendingDeliveries.add(temp);
 					pendingUnassignedDeliveriesCounter++;
 			}
-			//System.out.println("Unasssigned Pending Deliveries = " + pendingUnassignedDeliveriesCounter);
+			System.out.println("Unasssigned Pending Deliveries = " + pendingUnassignedDeliveriesCounter);
 			
 			//Group Query for all Past Deliveries, to populate Delivery History Table
 			ApiFuture<QuerySnapshot> queryPastDelivery = db.collection(c_PAST_DELIVERIES).get();
@@ -609,11 +602,11 @@ public class Driver {
 				pastDeliveriesCounter++;
 				//System.out.println(temp.toString());
 			}	
-			//System.out.println("Past Deliveries = " + pastDeliveriesCounter);
+			System.out.println("Past Deliveries = " + pastDeliveriesCounter);
 				
 		} catch (NullPointerException ee) {
 			
-			//ee.printStackTrace();
+			ee.printStackTrace();
 			System.out.println("No deliveries");
 		}
 		/* 
@@ -697,7 +690,7 @@ public class Driver {
 	}
 	
 	//FIREBASE ADD REPLENISHMENT REQUEST
-	public String sendReplenishmentRequest(ArrayList<Grocery> sol) {
+	public String sendReplenishmentRequest(ArrayList<Grocery> sol, String status) {
 
 		//Update the stock status in Firebase
 		CollectionReference docGroceryRef = db.collection(c_GROCERIES);
@@ -718,6 +711,7 @@ public class Driver {
 		data.put("Status", "Pending");
 		String invoiceNo = generateInvoiceNumber();
 		data.put("Invoice Number", invoiceNo);
+		data.put("Delivery Request Type", status);
 		
 		ApiFuture<WriteResult> result = docRef.set(data);
 		
@@ -795,7 +789,7 @@ public class Driver {
 		            DocumentSnapshot snapshot = transaction.get(documentRef).get();
 		            
 		            transaction.update(documentRef, "Status", "Completed");
-		            System.out.println("REPLENISHMENT = " + docID);
+		            //System.out.println("REPLENISHMENT = " + docID);
 		            return null;
 		          }
 		        });
@@ -894,7 +888,8 @@ public class Driver {
 			return false;
 		}
 	}
-
+	
+		
 	/*public static void main(String [] args) {
 
 			Driver d = new Driver();			

@@ -63,13 +63,13 @@ public class StaffTable extends JPanel implements MouseListener {
 		table.addMouseListener(this);
 		add(scrollPane);
 
-		DefaultTableCellRenderer leftRenderer = new DefaultTableCellRenderer();
-		leftRenderer.setHorizontalAlignment(SwingConstants.LEFT);
+		DefaultTableCellRenderer middleRenderer = new DefaultTableCellRenderer();
+		middleRenderer.setHorizontalAlignment(SwingConstants.CENTER);
 
-		table.getColumn("ID").setCellRenderer( leftRenderer);
-		table.getColumn("First Name").setCellRenderer( leftRenderer );
-		table.getColumn("Last Name").setCellRenderer( leftRenderer );
-		table.getColumn("Role").setCellRenderer( leftRenderer );
+		table.getColumn("ID").setCellRenderer( middleRenderer);
+		table.getColumn("First Name").setCellRenderer( middleRenderer );
+		table.getColumn("Last Name").setCellRenderer( middleRenderer );
+		table.getColumn("Role").setCellRenderer( middleRenderer );
 
 		table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
 
@@ -198,8 +198,132 @@ public class StaffTable extends JPanel implements MouseListener {
 	
 				update.setBounds(190, 500, 100, 50);
 				delete.setBounds(10, 500, 100, 50);
-				update.addActionListener(new update_AL(frame));
-				delete.addActionListener(new delete_AL(frame));
+				
+				update.addActionListener(new ActionListener() {
+					public void actionPerformed(ActionEvent e) {
+
+						Staff temp = new Staff();		
+
+						int fieldChecker = 0;
+						boolean numberCheck = false;
+
+						//Check if the textbox is empty
+						// If empty == true Then set to default (old) value
+						// Else set to the new updated value
+						if(fName.getText().trim().isEmpty() == true) {
+							fieldChecker++;
+							temp.setFirstName(currStaff.getFirstName());
+						} else
+							temp.setFirstName(fName.getText().trim());	
+
+						if(lName.getText().trim().isEmpty() == true) {
+							fieldChecker++;
+							temp.setLastName(currStaff.getLastName());
+						} else 
+							temp.setLastName(lName.getText().trim());
+
+						if (street.getText().trim().isEmpty() == true) {
+							fieldChecker++;
+							temp.setStreet((currStaff.getStreet()));
+						} else
+							temp.setStreet(street.getText().trim());
+
+						if(postal.getText().trim().isEmpty() == true) {
+							fieldChecker++;
+							temp.setPostal((currStaff.getPostal()));
+						} else
+							temp.setPostal(postal.getText().trim());
+
+						if(unit.getText().trim().isEmpty() == true) {
+							temp.setUnit((currStaff.getUnit()));
+						} else {
+							temp.setUnit(unit.getText().trim());
+							fieldChecker++;
+						}
+						if(contactNo.getText().trim().isEmpty() == true) {
+							fieldChecker++;
+							temp.setContactNumber(currStaff.getContactNumber());
+							numberCheck = true;
+						} else {
+							try {
+								if ( contactNo.getText().length() < 8) {
+										JOptionPane.showMessageDialog(tb.getMainPanel(), "Phone Number is too short" , "Add New Staff", 2);	
+								} else if ( contactNo.getText().length() > 8 ) {
+										JOptionPane.showMessageDialog(tb.getMainPanel(), "Phone Number is too long" , "Add New Staff", 2);
+								} else {
+									Long.parseLong(contactNo.getText().trim());
+									temp.setContactNumber(contactNo.getText().trim());
+									numberCheck = true;
+								}
+							} catch (NumberFormatException e1) {
+								numberCheck = false;
+							}
+						}
+						
+						if( fieldChecker == 5) {
+							JOptionPane.showMessageDialog(tb.getMainPanel(), "1 or more fields are empty" , "Updating Staff Information", 2);
+						} else if(fName.getText().trim().equalsIgnoreCase(currStaff.getFirstName()) || lName.getText().trim().equalsIgnoreCase(currStaff.getLastName()) ||  contactNo.getText().trim().equalsIgnoreCase(currStaff.getContactNumber()) || street.getText().trim().equalsIgnoreCase(currStaff.getStreet())
+								|| postal.getText().trim().equalsIgnoreCase(currStaff.getPostal())) {
+							JOptionPane.showMessageDialog(tb.getMainPanel(), "1 or more fields have duplicated values - Remove affected fields" , "Updating Staff Information", 2);
+						} else if (numberCheck == false) {
+							JOptionPane.showMessageDialog(tb.getMainPanel(), "Enter a Singapore Number" , "Updating Staff Information", 2);
+						} 
+						else {
+
+							temp.setRole(currStaff.getRole());
+							temp.setGender(currStaff.getGender());
+							temp.setUID(currStaff.getUID());
+							temp.setDD(currStaff.getDD());
+							temp.setMM(currStaff.getMM());
+							temp.setYY(currStaff.getYY());
+							temp.setEmail(currStaff.getEmail());
+							temp.setDocID(currStaff.getDocID());
+
+							//Update the database
+							tb.updateStaff(temp);				
+							frame.dispose();
+							
+							int pos = 0;
+
+							for ( Staff s : data) {
+								if (s.getDocID() == currStaff.getDocID())
+									break;
+								pos++;
+							}
+
+							data.remove(pos);
+							data.add(temp);
+							
+							JOptionPane.showMessageDialog(tb.getMainPanel(), "Successfully Updated Profile!" , "Staff Profile Update", 2);
+							
+							table.revalidate();
+							table.repaint();
+
+						}
+
+					}
+				});
+				//Send a Delete Request To Firestore
+				delete.addActionListener(new ActionListener() {
+					public void actionPerformed(ActionEvent e) {
+
+						tb.deleteStaff(currStaff);
+						frame.dispose();	
+						int pos = 0;
+
+						for ( Staff s : data) {
+							if (s.getDocID() == currStaff.getDocID())
+								break;
+							pos++;
+						}
+						
+						JOptionPane.showMessageDialog(tb.getMainPanel(), "Successfully removed " + data.get(pos).getFirstName() + " " + data.get(pos).getLastName() + " from the database" , "Staff Profile Deletion", 2);
+						
+						data.remove(pos);
+						table.revalidate();
+						table.repaint();
+					}
+				});
 	
 				frame.add(fNameLabel);
 				frame.add(fName);
@@ -216,138 +340,6 @@ public class StaffTable extends JPanel implements MouseListener {
 				frame.setVisible(true);
 	
 			} catch (ArrayIndexOutOfBoundsException e1) {}
-		}
-	}
-
-	class delete_AL implements ActionListener {
-		JFrame frame;
-
-		public delete_AL(JFrame temp) {
-			frame = temp;
-		}
-
-		public void actionPerformed(ActionEvent e) {
-			//Send a Delete Request To Firestore
-			tb.deleteStaff(currStaff);
-			frame.dispose();	
-			int pos = 0;
-
-			for ( Staff s : data) {
-				if (s.getDocID() == currStaff.getDocID())
-					break;
-				pos++;
-			}
-			
-			JOptionPane.showMessageDialog(tb.getMainPanel(), "Successfully removed " + data.get(pos).getFirstName() + " " + data.get(pos).getLastName() + " from the database" , "Staff Profile Deletion", 2);
-			
-			data.remove(pos);
-			table.revalidate();
-			table.repaint();
-		}
-	}
-
-	class update_AL implements ActionListener {
-		JFrame frame;
-
-		public update_AL(JFrame temp) {
-			frame = temp;
-		}
-
-		public void actionPerformed(ActionEvent e) {
-
-			Staff temp = new Staff();		
-
-			int fieldChecker = 0;
-			boolean numberCheck = false;
-
-			//Check if the textbox is empty
-			// If empty == true Then set to default (old) value
-			// Else set to the new updated value
-			if(fName.getText().trim().isEmpty() == true) {
-				fieldChecker++;
-				temp.setFirstName(currStaff.getFirstName());
-			} else
-				temp.setFirstName(fName.getText().trim());	
-
-			if(lName.getText().trim().isEmpty() == true) {
-				fieldChecker++;
-				temp.setLastName(currStaff.getLastName());
-			} else 
-				temp.setLastName(lName.getText().trim());
-
-			if (street.getText().trim().isEmpty() == true) {
-				fieldChecker++;
-				temp.setStreet((currStaff.getStreet()));
-			} else
-				temp.setStreet(street.getText().trim());
-
-			if(postal.getText().trim().isEmpty() == true) {
-				fieldChecker++;
-				temp.setPostal((currStaff.getPostal()));
-			} else
-				temp.setPostal(postal.getText().trim());
-
-			if(unit.getText().trim().isEmpty() == true) {
-				temp.setUnit((currStaff.getUnit()));
-			} else {
-				temp.setUnit(unit.getText().trim());
-				fieldChecker++;
-			}
-			if(contactNo.getText().trim().isEmpty() == true) {
-				fieldChecker++;
-				temp.setContactNumber(currStaff.getContactNumber());
-			} else {
-				try {
-					numberCheck = true;
-					Long.parseLong(contactNo.getText().trim());
-					temp.setContactNumber(contactNo.getText().trim());	
-				} catch (NumberFormatException e1) {
-					numberCheck = false;
-				}
-			}
-			
-			if( fieldChecker == 5) {
-				JOptionPane.showMessageDialog(tb.getMainPanel(), "1 or more fields are empty" , "Updating Staff Information", 2);
-			} else if(fName.getText().trim().equalsIgnoreCase(currStaff.getFirstName()) || lName.getText().trim().equalsIgnoreCase(currStaff.getLastName()) ||  contactNo.getText().trim().equalsIgnoreCase(currStaff.getContactNumber()) || street.getText().trim().equalsIgnoreCase(currStaff.getStreet())
-					|| postal.getText().trim().equalsIgnoreCase(currStaff.getPostal())) {
-				JOptionPane.showMessageDialog(tb.getMainPanel(), "1 or more fields have duplicated values - Remove affected fields" , "Updating Staff Information", 2);
-			} else if (numberCheck == false) {
-				JOptionPane.showMessageDialog(tb.getMainPanel(), "Enter a Singapore Number" , "Updating Staff Information", 2);
-			} 
-			else {
-
-				temp.setRole(currStaff.getRole());
-				temp.setGender(currStaff.getGender());
-				temp.setUID(currStaff.getUID());
-				temp.setDD(currStaff.getDD());
-				temp.setMM(currStaff.getMM());
-				temp.setYY(currStaff.getYY());
-				temp.setEmail(currStaff.getEmail());
-				temp.setDocID(currStaff.getDocID());
-
-				//Update the database
-				tb.updateStaff(temp);				
-				frame.dispose();
-				
-				int pos = 0;
-
-				for ( Staff s : data) {
-					if (s.getDocID() == currStaff.getDocID())
-						break;
-					pos++;
-				}
-
-				data.remove(pos);
-				data.add(temp);
-				
-				JOptionPane.showMessageDialog(tb.getMainPanel(), "Successfully Updated Profile!" , "Staff Profile Update", 2);
-				
-				table.revalidate();
-				table.repaint();
-
-
-			}
-
 		}
 	}
 
