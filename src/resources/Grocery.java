@@ -41,6 +41,17 @@ public class Grocery {
 		return price;
 	}
 	
+	public long getItemID() {
+		return itemID;
+	}
+	
+	public String getSupplier() {
+		return supplier;
+	}
+	public String getName() {
+		return name;
+	}
+	
 	public String toString() {
 		return "Name: " + name + " Supplier: " + supplier + " Amount: " + quantity + " Price: " + price;
 	}
