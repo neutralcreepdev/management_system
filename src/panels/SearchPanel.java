@@ -39,6 +39,7 @@ public class SearchPanel extends JPanel {
 		setLayout(null);
 		setBounds(850, 75, 610, 600);
 		setBorder(BorderFactory.createEtchedBorder());
+		setBackground(new Color(0xf2f5f6));
 		
 		panelLabel = new JLabel("<html><h2>Inventory Status</h2></html>");
 		searchLabel = new JLabel("SEARCH: ");
@@ -56,7 +57,7 @@ public class SearchPanel extends JPanel {
 		filterLabel.setBounds(320, 100, 70, 20);
 		filterComboBox.setBounds(370, 100, 100, 20);
 		resetButton.setBounds(475, 100, 80, 20);
-		table.setBounds(50, 130, 510, 450);
+		table.setBounds(40, 130, 530, 450);
 	
 		add(resetButton);
 		add(panelLabel);
@@ -73,13 +74,17 @@ public class SearchPanel extends JPanel {
 		
 	}
 	
-	public void updateRow(Grocery currG, Grocery updatedG) {
-		
+	public void updateStock(Grocery updatedG, Grocery oldG) {
+		iv.updateStock(updatedG, oldG);
 	}
 	
-/*	public Grocery getRow() {
-		return iv.getGroceryRow();
-	}*/
+	public void deleteStock(Grocery g)  {
+		iv.deleteStock(g);
+	}
+	
+	public void updateTable() {
+		iv.updateTables();
+	}
 	public void updateTable(ArrayList<Grocery> g) {
 		table.updateTableGrocery(g);
 	}

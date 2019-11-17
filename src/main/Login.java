@@ -45,6 +45,7 @@ public class Login extends JPanel {
 	    
 		// Consider a groupLayout to sort the setbounds issue
 		setLayout(null);
+		setBackground(new Color(0xf2f5f6));
 
 		loginButton = new JButton("Login");
 		exitButton = new JButton("Exit");
@@ -107,12 +108,12 @@ public class Login extends JPanel {
 				String userHash = MD5(pw + salt);
 				if (userHash.equals(hashPW)) {
 
-					JOptionPane.showMessageDialog(null, "Login!", null, 2, null);
+					JOptionPane.showMessageDialog(null, "Success!", "Login Success", 1, null);
 
 					driver.toggleLoginView();
 
 				} else
-					JOptionPane.showMessageDialog(null, "Failed!", null, 2, null);
+					JOptionPane.showMessageDialog(null, "Failed!", "Login Failed", 0, null);
 			} catch (IOException io) {
 				io.printStackTrace();
 			}

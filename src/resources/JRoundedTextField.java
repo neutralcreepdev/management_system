@@ -29,5 +29,4 @@ public class JRoundedTextField extends JTextField {
 	         }
 	         return shape.contains(x, y);
 	    }
-	}
-
+}

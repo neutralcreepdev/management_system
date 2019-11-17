@@ -30,6 +30,7 @@ public class DeliveryPanel extends JPanel {
 		setLayout(null);
 		setBounds(50, 75, 610, 600);
 		setBorder(BorderFactory.createEtchedBorder());
+		setBackground(new Color(0xf2f5f6));
 		
 		panelLabel = new JLabel("<html><h2>Deliveries Today</h2></html>");
 		filterLabel = new JLabel("FILTER: ");

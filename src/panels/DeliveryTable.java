@@ -24,7 +24,9 @@ import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.JTableHeader;
 import javax.swing.table.TableCellRenderer;
 
+import comparators.DeliverySortByCustomerID;
 import comparators.DeliverySortByDate;
+import comparators.DeliverySortByEmployeeID;
 import comparators.DeliverySortByOrderNumber;
 import comparators.DeliverySortByStatus;
 import resources.Delivery;
@@ -40,7 +42,7 @@ public class DeliveryTable extends JPanel implements MouseListener {
 	List<Delivery> tempData;
 	Delivery currDelivery;
 	ModelData modelData;
-	boolean dID = true, dDate = true, dStatus = true;
+	boolean dID = true, dDate = true, dStatus = true, dEID = true, dCID = true;
 	final JTableHeader header;
 
 	public DeliveryTable() {
@@ -49,8 +51,10 @@ public class DeliveryTable extends JPanel implements MouseListener {
 		currDelivery = new Delivery();
 
 		scrollPane = new JScrollPane(table);
-		table.setPreferredScrollableViewportSize(new Dimension(500, 400));
-
+		table.setPreferredScrollableViewportSize(new Dimension(500, 420));
+		table.setBackground(new Color(0xdaddd8));
+		scrollPane.getViewport().setBackground(new Color(0xf2f5f6));
+		
 		scrollPane.setBorder(BorderFactory.createLineBorder(Color.BLACK, 1));
 		table.setVisible(true);
 		table.addMouseListener(this);
@@ -106,10 +110,21 @@ public class DeliveryTable extends JPanel implements MouseListener {
 			Collections.sort(data, new DeliverySortByStatus());
 			if (dStatus) 
 				Collections.reverse(data);
-			dID = !dID;
+			dStatus = !dStatus;
 		break;
 		
-		default: ;
+		case 3:
+			Collections.sort(data, new DeliverySortByEmployeeID());
+			if(dEID)
+				Collections.reverse(data);
+			dEID = !dEID;
+		break;
+		case 4: 
+			Collections.sort(data, new DeliverySortByCustomerID());
+			if(dCID)
+				Collections.reverse(data);
+			dCID = !dCID;
+		break;
 		}
 
 		//Update the display
