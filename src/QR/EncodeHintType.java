@@ -16,6 +16,8 @@
 
 package QR;
 
+import java.awt.Dimension;
+
 public enum EncodeHintType {
 
   /**

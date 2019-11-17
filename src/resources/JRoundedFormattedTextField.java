@@ -6,7 +6,6 @@ import java.awt.geom.RoundRectangle2D;
 import java.text.NumberFormat;
 
 import javax.swing.JFormattedTextField;
-import javax.swing.JTextField;
 
 public class JRoundedFormattedTextField  extends JFormattedTextField {
 	

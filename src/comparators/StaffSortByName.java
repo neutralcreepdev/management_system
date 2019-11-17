@@ -2,7 +2,6 @@ package comparators;
 
 import java.util.Comparator;
 
-import resources.Grocery;
 import resources.Staff;
 
 public class StaffSortByName implements Comparator<Staff> {

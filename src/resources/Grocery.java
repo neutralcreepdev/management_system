@@ -2,20 +2,26 @@ package resources;
 
 public class Grocery {
 
-	String name, supplier, docID, itemID, description, imageURL;
-	long quantity;
+	String name, supplier, docID, itemID, description, imageURL, category;
+	long orderingQty, quantity;
 	double price;
-	
+	boolean toReplenish;
+	//Why do i have 3 constructors that differs alot?
 	public Grocery() {
 		name = "";
 		supplier ="";
+		docID = "";
 		itemID = "";
-		quantity = 0;
 		description = "";
-		price = 0.00;
+		quantity = 0;
 		imageURL = "www.sample.com";
+		category = "Others";
+		price = 0.00;
+		toReplenish = false;
+		orderingQty = 500;
+
 	}
-	public Grocery(String newName, String newSupplier, String newItemID, long startQty, double newPrice, String documentID, String newDesc, String newURL) {
+	public Grocery(String newName, String newSupplier, String newItemID, long startQty, double newPrice, String documentID, String newDesc, String newURL, boolean replenishmentStatus , String cat) {
 		name = newName;
 		supplier = newSupplier;
 		quantity = startQty;
@@ -24,8 +30,11 @@ public class Grocery {
 		description = newDesc;
 		docID = documentID;
 		imageURL = newURL;
+		toReplenish = replenishmentStatus;
+		category = cat;
+		orderingQty = 500;
 	}
-	public Grocery(String newName, String newSupplier, String newItemID, long startQty, double newPrice, String documentID, String newDesc) {
+	public Grocery(String newName, String newSupplier, String newItemID, long startQty, double newPrice, String documentID, String newDesc, boolean replenishmentStatus, String cat) {
 		name = newName;
 		supplier = newSupplier;
 		quantity = startQty;
@@ -34,6 +43,9 @@ public class Grocery {
 		description = newDesc;
 		docID = documentID;
 		imageURL = "www.sample.com";
+		toReplenish = replenishmentStatus;
+		category = cat;
+		orderingQty = 500;
 	}
 	
 	public void addStock(int qty) {
@@ -69,6 +81,12 @@ public class Grocery {
 	public String getImageURL() {
 		return imageURL;
 	}
+	public boolean getReplenishmentStatus() {
+		return toReplenish;
+	}
+	public String getCategory() {
+		return category;
+	}
 	
 	public void setPrice(double newPrice) {
 		price = newPrice;
@@ -89,7 +107,13 @@ public class Grocery {
 	public void setName(String newName) {
 		name = newName;
 	}
+	public void setOrderingQty(long a) {
+		orderingQty = a;
+	}
 	
+	public long getOrderingQty() { 
+		return orderingQty;
+	}
 	public String getDocID() {
 		return docID;
 	}
@@ -102,6 +126,12 @@ public class Grocery {
 	}
 	public void setImageUrl(String url) {
 		imageURL = url;
+	}
+	public void setReplenishmentStatus(boolean input) {
+		toReplenish = input;
+	}
+	public void setCategory(String input) {
+		category = input;
 	}
 	
 	public String toString() {

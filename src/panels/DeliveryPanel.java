@@ -12,31 +12,33 @@ import javax.swing.JPanel;
 
 import main.InteractionView;
 import resources.Delivery;
+import resources.Staff;
+import tables.DeliveryTable;
 
+//Should sort by date intially
 public class DeliveryPanel extends JPanel {
 	
 	private JLabel panelLabel, filterLabel;
 	private JComboBox<String> filterComboBox;
-	private String [] filteringCriteria = new String [] {"" , "ORDER NO", "STATUS - DONE" , "STATUS - DELIVERING" , "STATUS - LATE", "STATUS - WAITING"};
-	private DeliveryTable table;
+	private String [] filteringCriteria = new String [] {"<None>" , "STATUS - WAITING" , "STATUS - PACKAGED", "STATUS - DELIVERING"};
+	private DeliveryTable table;			
 	InteractionView iv;
 	
 	public DeliveryPanel(InteractionView v) {
-		
-		table = new DeliveryTable();
-		
+
 		iv = v;
+		table = new DeliveryTable(iv.getMainPanel());
 		
 		setLayout(null);
 		setBounds(50, 75, 610, 600);
 		setBorder(BorderFactory.createEtchedBorder());
 		setBackground(new Color(0xf2f5f6));
 		
-		panelLabel = new JLabel("<html><h2>Deliveries Today</h2></html>");
+		panelLabel = new JLabel("<html><h2>Pending Deliveries</h2></html>");
 		filterLabel = new JLabel("FILTER: ");
 		filterComboBox = new JComboBox<>(filteringCriteria);
 		
-		panelLabel.setBounds(220, 60, 150, 25);
+		panelLabel.setBounds(220, 60, 200, 25);
 		filterLabel.setBounds(190, 100, 70, 20);
 		filterComboBox.setBounds(240, 100, 150, 20);
 		table.setBounds(50, 130, 510, 450);
@@ -44,7 +46,7 @@ public class DeliveryPanel extends JPanel {
 		add(panelLabel);
 		add(filterLabel);
 		add(filterComboBox);
-		add(table); //Attach the SearchList
+		add(table);
 		
 		filterComboBox.addItemListener(new filter_IL());
 		
@@ -58,29 +60,18 @@ public class DeliveryPanel extends JPanel {
 	//This one should be more of extracting values based on the filter
 	public class filter_IL implements ItemListener {
 		public void itemStateChanged(ItemEvent e) {
-			
-			if ( e.getItem().equals("") && e.getStateChange() == e.SELECTED) {
-				table.reset();
-				System.out.println("ALL");
-			} else if ( e.getItem().equals("ORDER NO") && e.getStateChange() == e.SELECTED) {
-				System.out.println("ORDER NO SELECTED");
+			//Waiting, Packaging, Packaged, Delivery, Delivered/Late
+			if ( e.getItem().equals("<None>") && e.getStateChange() == ItemEvent.SELECTED) {
 				table.reset();
 				table.sort(0);
-			} else if ( e.getItem().equals("STATUS - DONE")   && e.getStateChange() == e.SELECTED)
-			 	table.filter("done");
-			else if ( e.getItem().equals("STATUS - DELIVERING")   && e.getStateChange() == e.SELECTED)
-				table.filter("delivering");
-			else if ( e.getItem().equals("STATUS - LATE")   && e.getStateChange() == e.SELECTED)
-				table.filter("late");
-			else if ( e.getItem().equals("STATUS - WAITING")   && e.getStateChange() == e.SELECTED) {
-				table.filter("waiting");
-				System.out.println("Clicked on - waiting");
+			} else if ( e.getItem().equals("STATUS - WAITING")   && e.getStateChange() == ItemEvent.SELECTED) {
+				table.filter("Waiting");
+			} else if ( e.getItem().equals("STATUS - PACKAGED")   && e.getStateChange() == ItemEvent.SELECTED) {
+			 	table.filter("Packaged");
+			} else if ( e.getItem().equals("STATUS - DELIVERING")   && e.getStateChange() == ItemEvent.SELECTED) {
+			 	table.filter("Delivering");
 			}
-		}
-		
-
-		
-		
-	}			
-		
+		}	
+	}	
+	
 }

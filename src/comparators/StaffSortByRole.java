@@ -1,6 +1,7 @@
 package comparators;
 
 import java.util.Comparator;
+
 import resources.Staff;
 
 public class StaffSortByRole implements Comparator<Staff>{

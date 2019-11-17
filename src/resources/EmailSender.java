@@ -1,14 +1,15 @@
 package resources;
 
-import com.sun.mail.smtp.SMTPTransport;
+import java.util.Date;
+import java.util.Properties;
 
 import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.Session;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
-import java.util.Date;
-import java.util.Properties;
+
+import com.sun.mail.smtp.SMTPTransport;
 
 public class EmailSender {
 
@@ -58,7 +59,9 @@ public class EmailSender {
             SMTPTransport t = (SMTPTransport) session.getTransport("smtp");
 			
 			// connect
+            System.out.println("Authenticating");
             t.connect(SMTP_SERVER, USERNAME, PASSWORD);
+            System.out.println("Authenticated");
 			
 			// send
             t.sendMessage(msg, msg.getAllRecipients());

@@ -1,13 +1,12 @@
 package panels;
 
 import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.util.ArrayList;
+import java.util.Collections;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -15,11 +14,12 @@ import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JTextField;
 
+import comparators.InventorySortByItemID;
 import main.InteractionView;
 import resources.Grocery;
 import resources.JRoundedTextField;
+import tables.SearchTable;
 
 public class SearchPanel extends JPanel {
 	
@@ -27,13 +27,15 @@ public class SearchPanel extends JPanel {
 	private JComboBox<String> filterComboBox;
 	private JRoundedTextField searchQueryField;
 	private JButton searchButton, resetButton; 
-	private String [] filteringCriteria = new String [] {"", "NAME", "SUPPLIER" , "QUANTITY"};
+	private String [] filteringCriteria = new String [] {"<None>", "NAME", "SUPPLIER" , "QUANTITY"};
 	private String filterCondition = "";
 	private SearchTable table;
 	private InteractionView iv;
+	private JPanel mainPanel;
 
 	public SearchPanel (InteractionView v) {
 		iv = v;
+		mainPanel = iv.getMainPanel();
 		table = new SearchTable(this);
 		
 		setLayout(null);
@@ -85,29 +87,48 @@ public class SearchPanel extends JPanel {
 	public void updateTable() {
 		iv.updateTables();
 	}
+	
+	public String uploadImagetoGCS(String fileName, String filePath) {
+		return iv.uploadImagetoGCS(fileName, filePath);
+	}
+	
 	public void updateTable(ArrayList<Grocery> g) {
-		table.updateTableGrocery(g);
+		try{
+			if(!g.isEmpty()) {
+		
+			Collections.sort(g, new InventorySortByItemID());
+			Collections.reverse(g);
+			table.updateTableGrocery(g);
+			} else {
+				System.out.println("Waiting for data...");
+			}
+		} catch (NullPointerException e) {}
+	}
+	
+	public JPanel getMainPanel() {
+		return mainPanel;
 	}
 
-	//Attach a filter listener
-	//This one should be more of extracting values based on the filter
 	public class filter_IL implements ItemListener {
 		public void itemStateChanged(ItemEvent e) {
 			filterCondition = (String) e.getItem();
 		}
 	}			
 	
-	//Attach the Search functions listener
 	public class search_AL implements ActionListener {
 		public void actionPerformed(ActionEvent arg0) {
 			// Execute the search for said item, returning the results via a temp arraylist and updating the table
-			table.filter(filterCondition, searchQueryField.getText());
-
+			
+			if (searchQueryField.getText().trim().isEmpty())
+				JOptionPane.showMessageDialog(mainPanel, "Search Field is Empty!" , "Search Field", 2);
+			else
+				table.filter(filterCondition, searchQueryField.getText());
 		}
 	}
 	
 	public class reset_AL implements ActionListener {
 		public void actionPerformed(ActionEvent arg0) {
+			filterComboBox.setSelectedIndex(0);
 			iv.updateTables();
 		}
 	}		
