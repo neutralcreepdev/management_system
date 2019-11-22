@@ -149,7 +149,7 @@ public class TaskBar extends JPanel {
 				redPanel.setBounds(0, 0, 600, 60);
 				
 				/*Total Sales*/
-				JLabel monthlyTotal = new JLabel("Total Sales (All): " + NumberFormat.getCurrencyInstance().format( getTotalSales()));
+				JLabel monthlyTotal = new JLabel("Total Sales (All): " + NumberFormat.getCurrencyInstance().format(getTotalSales()));
 				monthlyTotal.setBounds(60, 600, 250, 30);
 				monthlyTotal.setFont(sansserif16Bold);
 				
@@ -250,9 +250,7 @@ public class TaskBar extends JPanel {
 					public void actionPerformed(ActionEvent arg0) {
 						
 						Object filename = JOptionPane.showInputDialog(mainPanel, "Enter the filename", "Save report as", JOptionPane.PLAIN_MESSAGE);
-						
-						System.out.println("Size: " + thTable.getTableList().size());
-						
+						//Check how to make the spacing of the excel file
 						Workbook wb = new HSSFWorkbook();
 
 						CreationHelper createHelper = wb.getCreationHelper();
@@ -323,6 +321,12 @@ public class TaskBar extends JPanel {
 						cell = rowSummary.createCell(1);
 						cell.setCellValue(tax.getText().substring(9));
 						rowSummary.getCell(0).setCellStyle(style);
+						
+						sheet.autoSizeColumn(0);
+						sheet.autoSizeColumn(1);
+						sheet.autoSizeColumn(2);
+						sheet.autoSizeColumn(3);
+						
 						
 						//Write the output to a file
 						try  (OutputStream fileOut = new FileOutputStream("reports//" + filename.toString() + ".xls")) {
@@ -905,6 +909,10 @@ public class TaskBar extends JPanel {
 	public double getAverageDailySales(double value) {
 		int days = iv.getTransactionHistory().size();
 		
+		if (value == 0) {
+			return 0;
+		}
+		
 		return value/days;
 	}
 	
@@ -929,18 +937,14 @@ public class TaskBar extends JPanel {
 		}
 	}
 
-	//yet to test
 	public ArrayList<Grocery> consolidateArrayList(ArrayList<TransactionHistory> input) {
 		ArrayList<Grocery> consolidatedList = new ArrayList<>();
 
 		for ( TransactionHistory th : input) {
 			ArrayList<Object> tempCustTransaction = (ArrayList<Object>) th.getArray().get(0);
 			if ( consolidatedList.size() == 0 ) {
-				//**ASSUMPTION**//
 				//If the list is empty, then the first order of the TH will be added automatically
 					for ( Object o : tempCustTransaction) {
-						System.out.println(o.toString());
-						System.out.println(o.getClass());
 						Map<String, Object> t = (Map<String, Object>) o;
 						Grocery a = new Grocery((String)t.get("name"), (long)t.get("quantity"), (double)t.get("cost"));
 						consolidatedList.add(a);

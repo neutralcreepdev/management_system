@@ -90,12 +90,10 @@ public class TransactionHistory {
 	
 	public boolean isToday() {
 		Calendar now = Calendar.getInstance();
-		System.out.println("Date today: " + now.toString());
+		SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
 		
-		if (now.getTime().compareTo(transactionDate) == 0 ) {
-			System.out.println("isToday == true");
+		if (sdf.format(now.getTime()).compareTo(sdf.format(transactionDate)) == 0 )
 			return true;
-		} 
 		
 		return false;
 	}

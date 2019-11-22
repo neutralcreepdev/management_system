@@ -70,7 +70,7 @@ public class Driver {
 	
 	final static String c_GROCERIES = "Groceries";
 	final static String c_PAST_DELIVERIES = "Past Deliveries";
-	final static String c_DELIVERIES = "Deliveries";
+	final static String c_DELIVERIES = "Delivery";
 	final static String c_PENDING_DELIVERIES = "Pending Deliveries";
 	final static String c_STAFF = "Staff";
 	final static String c_STOCK_DELIVERY = "Stock Delivery";
@@ -113,7 +113,6 @@ public class Driver {
 		frame.revalidate();
 		checkGroceryQty();
 		gcs.connect();
-		iv.startDailySales();
 	}
 	
 	public void logout() {
@@ -179,9 +178,7 @@ public class Driver {
 	// Edit Stock method to update the values of each field in firebase
 	@SuppressWarnings("unused")
 	public void updateGrocery(Grocery updatedG, Grocery oldG) {
-		
-		System.out.println("Driver: Recieved an update call from SearchTable");
-		
+				
 		final DocumentReference documentRef = db.collection(c_GROCERIES).document(oldG.getDocID());
 
 		// run an asynchronous transaction
@@ -208,7 +205,6 @@ public class Driver {
 	//Receive Stock method call to update the quantity 
 	@SuppressWarnings("unused")
 	public void updateGrocery(String docID, long qty) {
-		System.out.println("Driver: Recieved an update call from Driver to topup quantity");
 		
 		final DocumentReference documentRef = db.collection(c_GROCERIES).document(docID);
 
@@ -256,14 +252,14 @@ public class Driver {
 			
 		try {
 			UserRecord userRecord = FirebaseAuth.getInstance().createUser(request);
-			System.out.println("Successfully created new user: " + userRecord.getUid());
+			//System.out.println("Successfully created new user: " + userRecord.getUid());
 			s.setUID(userRecord.getUid());
 			
 			JOptionPane.showMessageDialog(null, "Profile Created" , "Add New Staff", 1);
 	
 			addStaff(s);		
 		} catch (FirebaseAuthException e) {
-			System.out.println("Something went wrong with the Creation of User in DRIVER - createStaff");
+			System.out.println("Something went wrong with the creation of a new Staff");
 			e.printStackTrace();
 		}
 	}
@@ -394,7 +390,7 @@ public class Driver {
 			  Staffs.add(s);
 			}		
 		} catch (InterruptedException | ExecutionException e) {
-			e.printStackTrace();
+			System.out.println("No staff | Reset Connection");
 		}
 	}
 	
@@ -419,7 +415,7 @@ public class Driver {
 				Customers.add(customer);
 			}		
 		} catch (InterruptedException | ExecutionException e) {
-			e.printStackTrace();
+			System.out.println("No Customers | Reset Connection");
 		}
 		return Customers;
 	}
@@ -428,8 +424,8 @@ public class Driver {
 		// Get the collections (Orders)
 		
 		ArrayList<Customer> Customers = getCustomer();
-	
 		ArrayList<TransactionHistory> TH = new ArrayList<>();
+		
 		ApiFuture<QuerySnapshot> query = db.collection(c_TRANSACTION_HISTORY).get();
 
 		QuerySnapshot querySnapshot;
@@ -452,19 +448,9 @@ public class Driver {
 			  TH.add(th);
 			}		
 		} catch (InterruptedException | ExecutionException e) {
-			e.printStackTrace();
+			System.out.println("No Transaction History | Reset Connection");
 		}
-		
-		//Get Customer
-
-		//Store Customer to each profile
-		//Return TH
-
 		return TH;
-		// Set the fName and lname of Each document 
-		// Add to the table
-		// Display table
-		// Add a Refresh page button
 	}
 	
 	public ArrayList<Invoice> getReplenishmentList() {
@@ -483,7 +469,7 @@ public class Driver {
 				 Invoices.add(i);
 			}
 		} catch (InterruptedException | ExecutionException e) {
-			e.printStackTrace();
+			System.out.println("No replenishment list | Reset Connection");
 		}
 		
 		Collections.sort(Invoices, new InvoiceSortByDate());
@@ -508,7 +494,7 @@ public class Driver {
 			  Groceries.add(temp);
 			}			
 		} catch (InterruptedException | ExecutionException e) {
-			e.printStackTrace();
+			System.out.println("No Groceries | Reset Connection");
 		}
 	}
 	
@@ -544,7 +530,6 @@ public class Driver {
 												(Map<String,String>)document.get("address"),
 												document.getDouble("totalAmount"),
 												document.get("items"));
-					//temp.setFormattedDateToOrdinaryDateObject((Map<Object, Object>)document.get("expectedTime"), "expectedTime");
 					temp.setFormattedDateToOrdinaryDateObject((Map<Object, Object>)document.get("timeArrival"), "expectedTime");
 					temp.setEmployeeName(retrieveEmployeeObjectForDelivery(document.getString("employeeId")));
 					pendingDeliveries.add(temp);
@@ -572,7 +557,7 @@ public class Driver {
 												(Map<String,String>)document.get("address"),
 												document.getDouble("totalAmount"),
 												document.get("items"));
-					temp.setFormattedDateToOrdinaryDateObject((Map<Object, Object>)document.get("expectedTime"), "expectedTime");
+					temp.setFormattedDateToOrdinaryDateObject((Map<Object, Object>)document.get("timeArrival"), "expectedTime");
 					temp.setEmployeeName("<Waiting for pickup>");
 					pendingDeliveries.add(temp);
 					pendingUnassignedDeliveriesCounter++;
@@ -598,66 +583,21 @@ public class Driver {
 				temp.setFormattedDateToOrdinaryDateObject((Map<Object, Object>)document.get("actualTime"), "actualTime");
 				temp.setFormattedDateToOrdinaryDateObject((Map<Object, Object>)document.get("expectedTime"), "expectedTime");
 				temp.setEmployeeName(retrieveEmployeeObjectForDelivery(document.getString("employeeId")));
-				//System.out.println("Set the name here " + temp.getEmployeeName());
+
 			
 				pastDeliveries.add(temp);
 				pastDeliveriesCounter++;
-				//System.out.println(temp.toString());
+
 			}	
 			System.out.println("Past Deliveries = " + pastDeliveriesCounter);
 				
 		} catch (NullPointerException ee) {
-			
-			ee.printStackTrace();
 			System.out.println("No deliveries");
-		}
-		/* 
-		Map<String, DocumentSnapshot> a = new HashMap<>();
-
-		final Query queryDelivery = db.collectionGroup(c_DELIVERIES);
-		final ApiFuture<QuerySnapshot> querySnapshot = queryDelivery.get();
-		
-		try {
-			for (DocumentSnapshot document : querySnapshot.get().getDocuments()) {
-				a.put(document.getId(), document);
-			}
-		} catch (InterruptedException | ExecutionException e) {
+		} catch (InterruptedException e) {
 			e.printStackTrace();
-		}
-		 for (Map.Entry<String, DocumentSnapshot> entry : a.entrySet())  {
-			 //String tID, String cID, String eID, String newStatus, Timestamp a, String name, String type
-			 Delivery temp = new Delivery(entry.getValue().getString("transactionId"), entry.getValue().getString("customerId"), "EmployeeID", entry.getValue().getString("status"), entry.getValue().getTimestamp("dateOfTransaction"), entry.getValue().getString("name"), entry.getValue().getString("type"));
-			   if (temp.getDeliveryStatus().equalsIgnoreCase("Late") || temp.getDeliveryStatus().equalsIgnoreCase("Delivered"))
-				   Deliveries.add(temp);		   
-			   else
-				   pendingDeliveries.add(temp);
-		 }
-		} catch (NullPointerException ee) {
-			System.out.println("No deliveries");
-		}
-	*/
-/*
-		ApiFuture<QuerySnapshot> queryDelivery = db.collection(c_ALL_DELIVERIES).get();
-		
-		try {
-			QuerySnapshot querySnapshot = queryDelivery.get();
-			List<QueryDocumentSnapshot> documents = querySnapshot.getDocuments();
-			
-			for (DocumentSnapshot document2 : documents) {
-				 Delivery temp2 = new Delivery(document2.getString("transactionID"), document2.getString("customerID"),document2.getString("employeeID"), document2.getString("deliveryID"), document2.getString("Status"), document2.getTimestamp("date"));
-				 d.add(temp2);
-			}
-		} catch (InterruptedException | ExecutionException e) {
-			e.printStackTrace();
-		}
-		*/
-		//return d;
-		catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			System.out.println("No deliveries | Reset Connection");
 		} catch (ExecutionException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			System.out.println("No deliveries | Restart Program");
 		}
 	}
 
@@ -791,7 +731,7 @@ public class Driver {
 		            DocumentSnapshot snapshot = transaction.get(documentRef).get();
 		            
 		            transaction.update(documentRef, "Status", "Completed");
-		            //System.out.println("REPLENISHMENT = " + docID);
+
 		            return null;
 		          }
 		        });
@@ -852,7 +792,6 @@ public class Driver {
 		}
 				
 		public String write(String blobName, String path) {
-			//BlobId blobId = BlobId.of("neutral-creep-dev.appspot.com", blobName);
 			
 			InputStream inputStream;
 			StorageClient s = StorageClient.getInstance();
@@ -886,19 +825,8 @@ public class Driver {
 			conn.getInputStream();
 			return true;
 		} catch (Exception e) {
-			login.updateStatus(2);
+			updateLoginStatus();
 			return false;
 		}
 	}
-	
-		
-	/*public static void main(String [] args) {
-
-			Driver d = new Driver();			
-			d.connect();
-			d.readData();	
-
-
-	}*/
-
 }

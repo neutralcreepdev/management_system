@@ -39,7 +39,7 @@ public class StockOrderTable extends JPanel {
 		currGrocery = new Grocery();
 
 		scrollPane = new JScrollPane(table);
-		table.setAutoscrolls(true);
+		table.setPreferredScrollableViewportSize(new Dimension(800, 380));
 		scrollPane.setBorder(BorderFactory.createLineBorder(Color.BLACK, 1));
 		table.setOpaque(false);
 		table.setVisible(true);
@@ -64,9 +64,6 @@ public class StockOrderTable extends JPanel {
 		table.getColumn("Price").setCellRenderer( middleRenderer);
 		table.getColumn("Supplier Name").setCellRenderer( leftRenderer );
 		
-		table.getColumn("Item ID").setPreferredWidth(20);
-		table.getColumn("Price").setPreferredWidth(10);
-		
 		table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
 		
         header = table.getTableHeader();
@@ -85,10 +82,9 @@ public class StockOrderTable extends JPanel {
 
 	public void updateOrderListGrocery(ArrayList<Grocery> g) {
 		data = g;
-		//temp = g;
 		table.revalidate();
 		table.repaint();
-    	
+		table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
     	System.out.println("Update Stock Order Table");
 	}
 	

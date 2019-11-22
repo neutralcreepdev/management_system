@@ -49,7 +49,6 @@ public class InteractionView extends JPanel{
 
 	JLabel dailyTotal = new JLabel("Daily Sales: $0.00");
 	JLabel monthlyTotal = new JLabel("$0.00");
-	javax.swing.Timer dailySalesTimer;
 	
 	public InteractionView (Driver mainDriver) {
 
@@ -81,8 +80,6 @@ public class InteractionView extends JPanel{
 		urgentStockRequest.addActionListener(new UrgentStockRequest_AL());
 		weeklyStockRequest.addActionListener(new WeeklyStockRequest_AL());
 		
-		dailySalesTimer = new javax.swing.Timer(20000, new SalesListener());
-		
 		add(refreshButton);
 		add(addStockButton);
 		add(importStockDelivery);
@@ -110,7 +107,6 @@ public class InteractionView extends JPanel{
 	}
 
 	public void logout() {
-		dailySalesTimer.stop();
 		driver.logout();
 	}
 
@@ -145,6 +141,7 @@ public class InteractionView extends JPanel{
 
 	public class Refresh_AL implements ActionListener {
 		public void actionPerformed(ActionEvent arg0) {
+			updateSalesFigure();
 			updateTables();
 		}
 	}
@@ -658,8 +655,7 @@ public class InteractionView extends JPanel{
 		return driver.getTransactionHistory();
 	}
 	
-	public class SalesListener implements ActionListener {
-		public void actionPerformed(ActionEvent e) {
+	public void updateSalesFigure() {
 			double dailyAmount = 0.0;
 			
 			for(TransactionHistory h : driver.getTransactionHistory()) {
@@ -668,15 +664,7 @@ public class InteractionView extends JPanel{
 				}
 			}
 			dailyTotal.setText("Daily Sales: " + NumberFormat.getCurrencyInstance().format(dailyAmount));
-			System.out.println("Updates Daily Sales Figure");
-
 		}
-	}
-	
-	public void startDailySales() {
-		dailySalesTimer.start();
-	}
-	
 	
 	public JPanel getMainPanel() {
 		return mainPanel;
