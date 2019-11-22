@@ -21,6 +21,13 @@ public class Grocery {
 		orderingQty = 500;
 
 	}
+	
+	public Grocery (String name, long qty, double price) {
+		this.name=name;
+		this.quantity=qty;
+		this.price=price;
+	}
+	
 	public Grocery(String newName, String newSupplier, String newItemID, long startQty, double newPrice, String documentID, String newDesc, String newURL, boolean replenishmentStatus , String cat) {
 		name = newName;
 		supplier = newSupplier;

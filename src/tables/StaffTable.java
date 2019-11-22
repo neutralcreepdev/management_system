@@ -56,8 +56,8 @@ public class StaffTable extends JPanel implements MouseListener {
 		currStaff = new Staff();
 
 		scrollPane = new JScrollPane(table);
-		table.setPreferredScrollableViewportSize(new Dimension(500, 400));
-
+		//table.setPreferredScrollableViewportSize(new Dimension(500, 400));
+		table.setAutoscrolls(true);
 		scrollPane.setBorder(BorderFactory.createLineBorder(Color.BLACK, 1));
 		table.setVisible(true);
 		table.addMouseListener(this);

@@ -37,11 +37,12 @@ public class SearchPanel extends JPanel {
 		iv = v;
 		mainPanel = iv.getMainPanel();
 		table = new SearchTable(this);
+		table.setBackground(Color.WHITE);
 		
 		setLayout(null);
 		setBounds(850, 100, 610, 600);
 		setBorder(BorderFactory.createEtchedBorder());
-		setBackground(new Color(0xf2f5f6));
+		setBackground(Color.white);
 		
 		panelLabel = new JLabel("<html><h2>Inventory Status</h2></html>");
 		searchLabel = new JLabel("SEARCH: ");

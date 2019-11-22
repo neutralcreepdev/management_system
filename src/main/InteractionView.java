@@ -58,6 +58,7 @@ public class InteractionView extends JPanel{
 		dp = new DeliveryPanel(this);
 		tb = new TaskBar(this);
 		
+		
 		setLayout(null);
 		refreshButton = new JButton("Refresh Page");
 		refreshButton.setBounds(690, 120, 120, 20);
@@ -91,7 +92,7 @@ public class InteractionView extends JPanel{
 		add(dp);
 		add(tb);
 		add(dailyTotal);
-		setBackground(new Color(0xf2f5f6));
+		setBackground(Color.WHITE);
 		setVisible(false);
 
 	}
@@ -293,6 +294,7 @@ public class InteractionView extends JPanel{
 			solFrame = new JFrame("Urgent Stock Ordering");
 			String[] a = text.split("\n");
 
+			try {
 					for (int i = 0; i < a.length; i++) {
 						for (Grocery g : Groceries) {
 							if ( g.getName().equals(a[i])) {
@@ -301,7 +303,9 @@ public class InteractionView extends JPanel{
 						}
 					}
 					sol.updateOrderListGrocery(GroceriesOrderList); 
-
+			} catch (NullPointerException as) {
+				JOptionPane.showMessageDialog(mainPanel, "No stocks required for urgent delivery, please use weekly stock ordering", "Healthy Inventory", JOptionPane.INFORMATION_MESSAGE);
+			}
 			solFrame.setResizable(false);
 			solFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 			solFrame.setSize(900, 520);

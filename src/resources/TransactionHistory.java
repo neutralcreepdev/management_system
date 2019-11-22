@@ -1,6 +1,7 @@
 package resources;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
@@ -53,7 +54,7 @@ public class TransactionHistory {
 		return amount;
 	}
 	public List<Object> getArray() { 
-		return Arrays.asList(listOfItems);
+		return (List<Object>) Arrays.asList(listOfItems);
 	}
 	public Date getTransactionDate() {
 		return transactionDate;
@@ -88,8 +89,8 @@ public class TransactionHistory {
 	}
 	
 	public boolean isToday() {
-
 		Calendar now = Calendar.getInstance();
+		System.out.println("Date today: " + now.toString());
 		
 		if (now.getTime().compareTo(transactionDate) == 0 ) {
 			System.out.println("isToday == true");

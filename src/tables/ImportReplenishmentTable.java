@@ -48,7 +48,8 @@ public class ImportReplenishmentTable extends JPanel implements MouseListener {
 			currInvoice = new Invoice();
 
 			scrollPane = new JScrollPane(table);
-			table.setPreferredScrollableViewportSize(new Dimension(522, 420));
+
+			table.setAutoscrolls(true);
 			scrollPane.setBorder(BorderFactory.createLineBorder(Color.BLACK, 1));
 			table.setOpaque(false);
 			table.setVisible(true);

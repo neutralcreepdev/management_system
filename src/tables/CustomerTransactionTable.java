@@ -42,8 +42,12 @@ public class CustomerTransactionTable extends JPanel {
 
 		scrollPane = new JScrollPane(table);
 		table.setPreferredScrollableViewportSize(new Dimension(540, 200));
-
+		//table.setAutoscrolls(true);
+		//Check if the autoScroll borders works for a big number
+		
 		scrollPane.setBorder(BorderFactory.createLineBorder(Color.BLACK, 1));
+		scrollPane.getViewport().setBackground(new Color(0xf2f5f6));
+		
 		table.setVisible(true);
 		add(scrollPane);
 

@@ -9,6 +9,7 @@ import java.awt.event.MouseListener;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -50,6 +51,7 @@ public class TransactionHistoryTable extends JPanel implements MouseListener {
 	boolean dID = true, dDate = true, dStatus = true, dEID = true, dCID = true;
 	final JTableHeader header;
 	TaskBar tb;
+	int sizeOfTable = 0;
 
 	public TransactionHistoryTable(TaskBar t) {
 		tb = t;
@@ -58,8 +60,8 @@ public class TransactionHistoryTable extends JPanel implements MouseListener {
 		currTransaction = new TransactionHistory();
 
 		scrollPane = new JScrollPane(table);
-		table.setPreferredScrollableViewportSize(new Dimension(500, 400));
 
+		table.setAutoscrolls(true);
 		scrollPane.setBorder(BorderFactory.createLineBorder(Color.BLACK, 1));
 		table.setVisible(true);
 		table.addMouseListener(this);
@@ -90,7 +92,51 @@ public class TransactionHistoryTable extends JPanel implements MouseListener {
 		}); // End of header's mouseListener
 	}
 
-	public double filter(String condition) {
+	public double filterByDay(String condition) {
+		double totalAmount = 0.00;
+		ArrayList<TransactionHistory> sortedByDay = new ArrayList<>();
+
+		int d = Calendar.getInstance().get(Calendar.MONTH)+1;
+
+		String month = "Jan";
+		switch(d) {
+		
+		case 1: month = "Jan"; break;
+		case 2: month = "Feb"; break;
+		case 3: month = "Mar"; break;
+		case 4: month = "Apr"; break;
+		case 5: month = "May"; break;
+		case 6: month = "Jun"; break;
+		case 7: month = "Jul"; break;
+		case 8: month = "Aug"; break;
+		case 9: month = "Sep"; break;
+		case 10: month = "Oct"; break;
+		case 11: month = "Nov"; break;
+		case 12: month = "Dec"; break;
+			
+		}
+		
+		System.out.println("month    " + month);
+		SimpleDateFormat sdf = new SimpleDateFormat("dd/MMM");
+		
+		for (TransactionHistory temp : data) {
+			
+			if (sdf.format(temp.getTransactionDate()).equalsIgnoreCase(condition + "/" + month) ) {
+				sortedByDay.add(temp);
+				totalAmount += temp.getAmount();
+			}
+		}
+		
+		if (sortedByDay.size() <= 0)
+			return -1;
+		else { 
+			sizeOfTable = sortedByDay.size();
+			updateTable(sortedByDay);
+			return totalAmount;
+		}
+	}
+	
+	public double filterByMonth(String condition) {
 		double totalAmount = 0.00;
 		ArrayList<TransactionHistory> sortedByMonth = new ArrayList<>();
 	
@@ -99,7 +145,6 @@ public class TransactionHistoryTable extends JPanel implements MouseListener {
 		for (TransactionHistory temp : data) {
 			
 			if (sdf.format(temp.getTransactionDate()).equalsIgnoreCase(condition) ) {
-				//System.out.println("Sorted a date into the list -> " + temp.getTransactionDate());
 				sortedByMonth.add(temp);
 				totalAmount += temp.getAmount();
 			}
@@ -108,9 +153,14 @@ public class TransactionHistoryTable extends JPanel implements MouseListener {
 		if (sortedByMonth.size() <= 0)
 			return -1;
 		else { 
+			sizeOfTable = sortedByMonth.size();
 			updateTable(sortedByMonth);
 			return totalAmount;
 		}
+	}
+
+	public ArrayList<TransactionHistory> getTableList() {
+		return (ArrayList<TransactionHistory>) data;
 	}
 	
 	//"Transaction ID", "Transaction Date", "Customer ID", "Type", "Amount"	
@@ -183,7 +233,7 @@ public class TransactionHistoryTable extends JPanel implements MouseListener {
 				table.updateTable(currTransaction.getArray());
 				
 				//Create a table here showing customer profile and details
-				JLabel nameLabel, addressLabel, /*dobLabel,*/ contactNumberLabel, amountLabel, typeLabel, dateOfTransactionLabel, transactionID;
+				JLabel nameLabel, addressLabel, contactNumberLabel, amountLabel, typeLabel, dateOfTransactionLabel, transactionID;
 	
 				nameLabel = new JLabel("Name: " + currTransaction.getCustomer().getFirstName() + " " + currTransaction.getCustomer().getLastName());
 				
@@ -192,7 +242,7 @@ public class TransactionHistoryTable extends JPanel implements MouseListener {
 				else 
 					addressLabel = new JLabel("Address: " + currTransaction.getCustomer().getStreet() + " #" + currTransaction.getCustomer().getUnit() + " S" + currTransaction.getCustomer().getPostal());
 				
-				//dobLabel = new JLabel("DOB: " + currTransaction.getCustomer().getDOB());
+				
 				contactNumberLabel = new JLabel("Contact No. : " + currTransaction.getCustomer().getContactNumber());
 				typeLabel = new JLabel("Type: " + currTransaction.getType());
 				dateOfTransactionLabel = new JLabel("Transaction Date: " + parseDateFormal(currTransaction.getTransactionDate()));
@@ -203,11 +253,11 @@ public class TransactionHistoryTable extends JPanel implements MouseListener {
 				addressLabel.setBounds	(35, 40, 300, 20);			contactNumberLabel.setBounds		(330, 40, 300, 20);			
 				amountLabel.setBounds	(35, 70, 300, 20);
 				
-				table.setBounds(5, 150, 600, 250);
+				table.setBounds(5, 150, 570, 240);
 				
 				frame.add(nameLabel);
 				frame.add(addressLabel);
-				//frame.add(dobLabel);
+
 				frame.add(contactNumberLabel);
 				frame.add(typeLabel);
 				frame.add(dateOfTransactionLabel);
@@ -232,6 +282,10 @@ public class TransactionHistoryTable extends JPanel implements MouseListener {
 		table.repaint();
     
 		System.out.println("Updated Transaction History Table");
+	}
+	
+	public int getTableSize() { 
+		return sizeOfTable;
 	}
 	
 	//Edit table column width

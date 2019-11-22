@@ -36,8 +36,8 @@ public class ViewReplenishmentTable extends JPanel {
 			table = new JTable(modelData);
 
 			scrollPane = new JScrollPane(table);
-			table.setPreferredScrollableViewportSize(new Dimension(522, 420));
-			
+			//table.setPreferredScrollableViewportSize(new Dimension(522, 420));
+			table.setAutoscrolls(true);
 			scrollPane.setBorder(BorderFactory.createLineBorder(Color.BLACK, 1));
 			table.setOpaque(false);
 			table.setVisible(true);

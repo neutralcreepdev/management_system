@@ -109,6 +109,7 @@ public class Driver {
 		login.setVisible(false);
 		iv.setView();
 		iv.setData(Groceries, pendingDeliveries);
+		frame.setBackground(Color.white);
 		frame.revalidate();
 		checkGroceryQty();
 		gcs.connect();
@@ -398,6 +399,7 @@ public class Driver {
 	}
 	
 	public ArrayList<Staff> getStaff() {
+		getAllStaff();
 		return Staffs;
 	}
 	

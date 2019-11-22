@@ -27,7 +27,6 @@ public class StockOrderTable extends JPanel {
 	JTable table;
 	JScrollPane scrollPane;
     List<Grocery> data;
-    //List<Grocery> temp;
     Grocery currGrocery;
     ModelData modelData;
     final JTableHeader header;
@@ -40,7 +39,7 @@ public class StockOrderTable extends JPanel {
 		currGrocery = new Grocery();
 
 		scrollPane = new JScrollPane(table);
-		table.setPreferredScrollableViewportSize(new Dimension(780, 400));		
+		table.setAutoscrolls(true);
 		scrollPane.setBorder(BorderFactory.createLineBorder(Color.BLACK, 1));
 		table.setOpaque(false);
 		table.setVisible(true);

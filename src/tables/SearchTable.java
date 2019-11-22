@@ -84,7 +84,8 @@ public class SearchTable extends JPanel implements MouseListener {
 		currGrocery = new Grocery();
 
 		scrollPane = new JScrollPane(table);
-		table.setPreferredScrollableViewportSize(new Dimension(522, 420));
+
+		table.setAutoscrolls(true);
 		
 		scrollPane.setBorder(BorderFactory.createLineBorder(Color.BLACK, 1));
 		table.setOpaque(false);
@@ -97,7 +98,6 @@ public class SearchTable extends JPanel implements MouseListener {
 		leftRenderer.setHorizontalAlignment(SwingConstants.LEFT);
 		middleRenderer.setHorizontalAlignment(SwingConstants.CENTER);
 
-		table.setBackground(new Color(0xdaddd8));
 		scrollPane.getViewport().setBackground(new Color(0xf2f5f6));
 		
 		table.getColumn("Item ID").setCellRenderer( middleRenderer );
@@ -298,6 +298,10 @@ public class SearchTable extends JPanel implements MouseListener {
 					imagePreviewPanel.repaint();
 					imagePreviewPanel.revalidate();		
 				}
+				
+				update.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+				generateQR.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+				delete.setBorder(BorderFactory.createLineBorder(Color.BLACK));
 								
 				update.addActionListener(new ActionListener() {
 					String url = "";				

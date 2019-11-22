@@ -10,12 +10,18 @@ import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.text.NumberFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
 import javax.swing.BorderFactory;
@@ -30,11 +36,21 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 
+import org.apache.poi.hssf.usermodel.HSSFCellStyle;
+import org.apache.poi.hssf.usermodel.HSSFFont;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CreationHelper;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
 import org.jdatepicker.impl.JDatePanelImpl;
 import org.jdatepicker.impl.JDatePickerImpl;
 import org.jdatepicker.impl.UtilDateModel;
 
 import main.InteractionView;
+import resources.Delivery;
+import resources.Grocery;
 import resources.JRoundedTextField;
 import resources.Staff;
 import resources.TransactionHistory;
@@ -62,25 +78,38 @@ public class TaskBar extends JPanel {
 	private JRoundedTextField fName, lName, street, postal, unit, number, email;
 
 	public TaskBar(InteractionView iv) {
-
+		
 		TaskBar tb = this;
 		this.iv = iv;
 		mainPanel = iv.getMainPanel();
 
 		setLayout(null);
 		setBounds(0, 0, 1520, 50);
-		setBackground(Color.orange);
+		setBackground(new Color(0x8b041f));
 
 		companyLabel = new JLabel("Neutral Creep");
 		logout = new JLabel("Logout");
 		deliveryHistory = new JLabel("Delivery History");
 		staffMgmt = new JLabel("Staff Management");
 		tHistoryLabel = new JLabel("Transaction History");
-
-		companyLabel.setFont(new Font("sansserif", Font.PLAIN, 20));
-
+		
+		Font sanserif16 = new Font("sansserif", Font.PLAIN, 16);
+		Font sanserif14 = new Font("sansserif", Font.PLAIN, 14);
+		Font sanserif20 = new Font("sansserif", Font.PLAIN, 20);
+		deliveryHistory.setForeground(Color.WHITE);
+		deliveryHistory.setFont(sanserif14);
+		staffMgmt.setForeground(Color.WHITE);
+		staffMgmt.setFont(sanserif14);
+		tHistoryLabel.setForeground(Color.WHITE);
+		tHistoryLabel.setFont(sanserif14);
+		logout.setForeground(Color.WHITE);
+		logout.setFont(sanserif14);
+		
+		companyLabel.setFont(sanserif20);
+		companyLabel.setForeground(Color.WHITE);
 		time = new JLabel("TIME: ");
-		time.setFont(new Font("sansserif", Font.PLAIN, 12));
+		time.setFont(sanserif16);
+		time.setForeground(Color.WHITE);
 
 		tHistoryLabel.setBounds(1140, 10, 200, 30);
 		companyLabel.setBounds(40, 10, 200, 30);
@@ -91,17 +120,58 @@ public class TaskBar extends JPanel {
 
 		//TRANSACTION HISTORY
 		tHistoryLabel.addMouseListener(new MouseAdapter() {
+			Font sansserif16Bold = new Font("sansserif", Font.BOLD, 16);
+			Font sansserif14Bold = new Font("sansserif", Font.BOLD, 14);
+			double total = 0;
+			
 			public void mouseClicked(MouseEvent e) {
+				total = getTotalSales();
 				JFrame transactionFrame = new JFrame("Transaction History");
+				
+				transactionFrame.setSize(600, 750);
+				transactionFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+				transactionFrame.setLayout(null);
+				transactionFrame.setResizable(false);
+				transactionFrame.getContentPane().setBackground(Color.white);
+				
+				
 				TransactionHistoryTable thTable = new TransactionHistoryTable(tb);
 
+				/*Header*/
 				JLabel panelLabel = new JLabel("<html><h1>TRANSACTION HISTORY</h1></html>");
-				JLabel monthlyTotal = new JLabel("Total Sales (All): " + NumberFormat.getCurrencyInstance().format(getTotalSales()));
-				monthlyTotal.setBounds(320, 80, 150, 30);
+				panelLabel.setBounds(160, 0, 300, 25);
+				panelLabel.setForeground(Color.white);
+				
+				/*Red Panel*/
+				JPanel redPanel = new JPanel();
+				redPanel.setBackground(new Color(0x8b041f));
+				redPanel.add(panelLabel);
+				redPanel.setBounds(0, 0, 600, 60);
+				
+				/*Total Sales*/
+				JLabel monthlyTotal = new JLabel("Total Sales (All): " + NumberFormat.getCurrencyInstance().format( getTotalSales()));
+				monthlyTotal.setBounds(60, 600, 250, 30);
+				monthlyTotal.setFont(sansserif16Bold);
+				
+				/*Net Sales*/
+				JLabel netSales = new JLabel("Sales(w/o Tax): " + NumberFormat.getCurrencyInstance().format(getNetSales(total)));
+				netSales.setFont(sansserif14Bold);
+				netSales.setBounds(60, 630, 250, 30);
+				
+				/*Tax*/
+				JLabel tax = new JLabel("GST(7%): " + NumberFormat.getCurrencyInstance().format(getGstAmount(total)));
+				tax.setFont(sansserif14Bold);
+				tax.setBounds(60, 660, 250, 30);
+				
+				/*Avg Sales*/
+				JLabel averageSales = new JLabel("Avg. Sale (All): " + NumberFormat.getCurrencyInstance().format(getAverageDailySales(total)));
+				averageSales.setBounds(320, 600, 250, 30);
+				averageSales.setFont(sansserif16Bold);
+				
 				ImageIcon searchIcon = new ImageIcon("assets//searchIcon.png");
 				searchIcon = new ImageIcon(searchIcon.getImage().getScaledInstance(30, 30, Image.SCALE_DEFAULT));
 				JButton search = new JButton(searchIcon);
-				search.setBounds(500,80,40,40);
+				search.setBounds(480,90,40,40);
 				
 				search.addActionListener(new ActionListener() {
 
@@ -163,11 +233,137 @@ public class TaskBar extends JPanel {
 						}
 					}
 				});
-					
 				
+				/*Transaction Panel*/
+				JPanel viewTransactionPanel = new JPanel();
+				viewTransactionPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(Color.BLACK), "View Transactions"));
+				viewTransactionPanel.setBounds(70, 80, 250, 60);
+				viewTransactionPanel.setBackground(Color.white);
+	
 				
-				JButton monthlyViewButton = new JButton("<html>View Transaction<br><center>by Month</center></html>");
-				monthlyViewButton.setBounds(90, 80, 150, 50);
+				ImageIcon reportIcon = new ImageIcon("assets//ExcelIcon.png");
+				reportIcon = new ImageIcon(reportIcon.getImage().getScaledInstance(20, 20, Image.SCALE_DEFAULT));
+				JButton generateReport = new JButton("Generate Report", reportIcon);
+				generateReport.setBounds( 320, 640, 170, 40);
+				generateReport.addActionListener(new ActionListener() {
+					@Override
+					public void actionPerformed(ActionEvent arg0) {
+						
+						Object filename = JOptionPane.showInputDialog(mainPanel, "Enter the filename", "Save report as", JOptionPane.PLAIN_MESSAGE);
+						
+						System.out.println("Size: " + thTable.getTableList().size());
+						
+						Workbook wb = new HSSFWorkbook();
+
+						CreationHelper createHelper = wb.getCreationHelper();
+						Sheet sheet = wb.createSheet("Sheet1");
+						// Create a row and put some cells in it. Rows are 0 based.
+						Row row = sheet.createRow(0);
+						// Create a cell and put a value in it.
+						Cell cell = row.createCell(0);
+						cell.setCellValue("Grocery");
+						cell = row.createCell(1);
+						cell.setCellValue("Qty Sold");
+						cell = row.createCell(2);
+						cell.setCellValue("Price");
+
+						
+						HSSFCellStyle style = (HSSFCellStyle) wb.createCellStyle();
+						HSSFFont font = (HSSFFont) wb.createFont();
+						font.setFontName(HSSFFont.FONT_ARIAL);
+						font.setFontHeightInPoints((short)16);
+						font.setBold(true);
+						style.setFont(font);
+
+						for(int j = 0; j<3; j++)
+							row.getCell(j).setCellStyle(style);
+						
+						//Insert algorithm to gather data\
+						ArrayList<Grocery> groceryReport = consolidateArrayList(thTable.getTableList());
+						int rowCounter = 1;
+						for (Grocery a : groceryReport) {
+							//Creates Rows
+							row = sheet.createRow(rowCounter++);
+							//Create Cells and populate them
+							cell = row.createCell(0);
+							cell.setCellValue(a.getName());
+							cell = row.createCell(1);
+							cell.setCellValue(a.getQuantity());
+							cell = row.createCell(2);
+							cell.setCellValue(a.getPrice());
+						}
+						
+						//Insert Sales update. using the index from the above algorithm to continue
+						
+						font.setFontHeightInPoints((short)12);	
+						
+						Row rowSummary = sheet.createRow(rowCounter+5);
+						cell = rowSummary.createCell(0);
+						cell.setCellValue("Total Sales: ");
+						cell = rowSummary.createCell(1);
+						cell.setCellValue(monthlyTotal.getText().substring(19));
+						rowSummary.getCell(0).setCellStyle(style);
+						
+						cell = rowSummary.createCell(2);
+						cell.setCellValue("Average Sales");
+						cell = rowSummary.createCell(3);
+						cell.setCellValue(averageSales.getText().substring(17));
+						rowSummary.getCell(2).setCellStyle(style);
+						
+						rowSummary = sheet.createRow(rowCounter+6);
+						cell = rowSummary.createCell(0);
+						cell.setCellValue("Net Sale: ");
+						cell = rowSummary.createCell(1);
+						cell.setCellValue(netSales.getText().substring(16));
+						rowSummary.getCell(0).setCellStyle(style);
+						
+						rowSummary = sheet.createRow(rowCounter+7);
+						cell = rowSummary.createCell(0);
+						cell.setCellValue("GST(7%): ");
+						cell = rowSummary.createCell(1);
+						cell.setCellValue(tax.getText().substring(9));
+						rowSummary.getCell(0).setCellStyle(style);
+						
+						//Write the output to a file
+						try  (OutputStream fileOut = new FileOutputStream("reports//" + filename.toString() + ".xls")) {
+						    wb.write(fileOut);
+						    JOptionPane.showMessageDialog(mainPanel, "Report - " + filename.toString() + " saved!", "File Saved", JOptionPane.INFORMATION_MESSAGE);
+						} catch (FileNotFoundException e) {
+							e.printStackTrace();
+						} catch (IOException e) {
+							e.printStackTrace();
+						}
+					}
+				});
+				
+				//need to add in more fake data to show the differences in the list
+				JButton dailyViewButton = new JButton("by Day");
+				dailyViewButton.addActionListener(new ActionListener() {
+					@Override
+					public void actionPerformed(ActionEvent arg0) {
+						String [] options = {"1" ,"2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24", "25", "26", "27", "28", "29", "30", "31"};
+						
+						Object selection = JOptionPane.showInputDialog(mainPanel, "Choose a day", "Daily Transaction Records", JOptionPane.PLAIN_MESSAGE, null, options, options[0]);
+				        
+						if ( selection == null ) {
+							System.out.println("Cancel Selected");
+							//Do nothing
+						} else {
+							thTable.updateTable(iv.getTransactionHistory());
+							double value = thTable.filterByDay(selection.toString());
+							if ( value < 0)
+								JOptionPane.showMessageDialog(mainPanel, "Selected Day has no records" , "Empty Records", JOptionPane.INFORMATION_MESSAGE);
+							else {
+								monthlyTotal.setText("Total Sales ("+ selection.toString()+"): " + NumberFormat.getCurrencyInstance().format(value));
+								averageSales.setText("Avg. Sale ("+ selection.toString()+"): " + NumberFormat.getCurrencyInstance().format(value/thTable.getTableSize()));
+								tax.setText("GST(7%): "+ selection.toString()+"): " + NumberFormat.getCurrencyInstance().format(getGstAmount(value)));
+								netSales.setText("Sales(W/o Tax): " + NumberFormat.getCurrencyInstance().format(getNetSales(value)));
+							}
+						}
+					} 
+				});
+				
+				JButton monthlyViewButton = new JButton("by Month");
 				monthlyViewButton.addActionListener(new ActionListener() {
 
 					@Override
@@ -181,30 +377,38 @@ public class TaskBar extends JPanel {
 							//Do nothing
 						} else {
 							thTable.updateTable(iv.getTransactionHistory());
-							double value = thTable.filter(selection.toString());
+							
+							double value = thTable.filterByMonth(selection.toString());
+							
 							if ( value < 0)
 								JOptionPane.showMessageDialog(mainPanel, "Selected Month has no records" , "Empty Records", JOptionPane.INFORMATION_MESSAGE);
-							else 
+							else {
 								monthlyTotal.setText("Total Sales ("+ selection.toString()+"): " + NumberFormat.getCurrencyInstance().format(value));
+								averageSales.setText("Avg. Sale ("+ selection.toString()+"): " + NumberFormat.getCurrencyInstance().format(value/thTable.getTableSize()));
+								tax.setText("GST(7%): "+ selection.toString()+"): " + NumberFormat.getCurrencyInstance().format(getGstAmount(value)));
+								netSales.setText("Sales(W/o Tax): " + NumberFormat.getCurrencyInstance().format(getNetSales(value)));
+							}
 						}
-						//need to add in more fake data to show the differences in the list
 					} 
 					
 				});
-				transactionFrame.setSize(600, 650);
-				transactionFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-				transactionFrame.setLayout(null);
-				transactionFrame.setResizable(false);
 
-				thTable.setBorder(BorderFactory.createEtchedBorder());
-				panelLabel.setBounds(160, 30, 300, 25);
+				
+				viewTransactionPanel.add(monthlyViewButton);
+				viewTransactionPanel.add(dailyViewButton);
+				
 				thTable.setBounds(25, 150, 530, 450);
+				thTable.setBackground(Color.WHITE);
 
-				transactionFrame.add(panelLabel);
+				transactionFrame.add(redPanel);
 				transactionFrame.add(thTable);
-				transactionFrame.add(monthlyViewButton);
+				transactionFrame.add(viewTransactionPanel);
 				transactionFrame.add(monthlyTotal);
+				transactionFrame.add(averageSales);
 				transactionFrame.add(search);
+				transactionFrame.add(tax);
+				transactionFrame.add(netSales);
+				transactionFrame.add(generateReport);
 
 				transactionFrame.setVisible(true);
 
@@ -218,23 +422,36 @@ public class TaskBar extends JPanel {
 			public void mouseClicked(MouseEvent e) {
 
 				JFrame staffFrame = new JFrame("Staff Management");
-				sTable = new StaffTable(tb);
-				JButton addStaff = new JButton("Add New Staff");
-				JLabel panelLabel = new JLabel("<html><h1>STAFF MANAGEMENT</h1></html>");
-
-				staffFrame.setSize(1000, 700);
+				
+				staffFrame.setSize(600, 650);
 				staffFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 				staffFrame.setLayout(null);
+				staffFrame.setResizable(false);
+				staffFrame.getContentPane().setBackground(Color.white);
+				
+				JPanel redPanel = new JPanel();
+				redPanel.setBackground(new Color(0x8b041f));
 
-				sTable.setBorder(BorderFactory.createEtchedBorder());
-				staffFrame.setBounds(50, 75, 610, 600);
-				panelLabel.setBounds(160, 30, 300, 25);
-				sTable.setBounds(40, 100, 510, 450);
-				addStaff.setBounds(422, 75, 125, 20);
+				sTable = new StaffTable(tb);
+				
+				ImageIcon addNewStaffIcon = new ImageIcon("assets//addStaffIcon.jpg");
+				addNewStaffIcon = new ImageIcon(addNewStaffIcon.getImage().getScaledInstance(50, 50, Image.SCALE_DEFAULT));
+
+				
+				JButton addStaff = 	new JButton(addNewStaffIcon);
+				JLabel panelLabel = new JLabel("<html><h1>STAFF MANAGEMENT</h1></html>");
+				panelLabel.setForeground(Color.WHITE);
+				redPanel.add(panelLabel);
+				redPanel.setBounds(0, 0, 610, 60);
+
+				panelLabel.setBounds(80,0, 290, 25);
+				sTable.setBounds(40, 150, 510, 490);
+				sTable.setBackground(Color.WHITE);
+				addStaff.setBounds(480, 80, 60, 60);
 
 				addStaff.addActionListener(new addStaff_AL(sTable));
 
-				staffFrame.add(panelLabel);
+				staffFrame.add(redPanel);
 				staffFrame.add(sTable);
 				staffFrame.add(addStaff);
 
@@ -256,22 +473,101 @@ public class TaskBar extends JPanel {
 				dhFrame.setResizable(false);
 				dhFrame.setSize(600, 650);
 				dhFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-
+				dhFrame.getContentPane().setBackground(Color.WHITE);
+				
 				JLabel panelLabel, filterLabel;
+				JPanel redPanel = new JPanel();
+				redPanel.setBackground(new Color(0x8b041f));
+
+				panelLabel = new JLabel("<html><h1>Past Deliveries</h1></html>");
+				panelLabel.setForeground(Color.WHITE);
+				redPanel.add(panelLabel);
+				redPanel.setBounds(0, 0, 600, 60);
+
+				
+				ImageIcon searchIcon = new ImageIcon("assets//searchIcon.png");
+				searchIcon = new ImageIcon(searchIcon.getImage().getScaledInstance(30, 30, Image.SCALE_DEFAULT));
+				JButton search = new JButton(searchIcon);
+				search.setBounds(500,80,40,40);
+				
+				search.addActionListener(new ActionListener() {
+
+					@Override
+					public void actionPerformed(ActionEvent arg0) {
+						Object selection = JOptionPane.showInputDialog(mainPanel, "Enter Transaction ID", "Search for a record", JOptionPane.PLAIN_MESSAGE);
+						if ( selection == null ) {
+							System.out.println("Cancel Selected");
+							//Do nothing
+						} else {	
+							boolean resultFound = false;
+
+								//Might need to add a boolean to determine if the delivery information is enough
+								// E.g. Pending unSelected deliveries, they dont have certain information like staff names etc
+								for (Delivery d : iv.getPastDeliveries()) {
+									if (d.getTransactionID().equals(selection.toString())) {
+										//This method shall print the details of the delivery set
+										resultFound = true;
+										JFrame frame = new JFrame("Delivery Information #" + d.getTransactionID());
+										frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+										frame.setSize(630, 450);
+										frame.setLayout(null);
+										
+										JLabel customerName, address, status, expectedTime, actualTime, transactionDate, amountSpent;
+										JLabel employeeName; 
+										
+										customerName = new JLabel("Customer Name: " + d.getCustomerName());
+										address = new JLabel("Address: " + d.getAddress());
+										status = new JLabel("Status: " + d.getDeliveryStatus());
+										expectedTime = new JLabel("Time Expected: " + d.getExpectedDate() + " " + parseTimeString(d.getExpectedTime()));
+										actualTime = new JLabel("Time Arrived: " + d.getActualDate() + " " + parseTimeString(d.getActualTime()));
+										transactionDate = new JLabel("Transaction Date: " + parseDateFormal(d.getTransactionDate()));
+										amountSpent = new JLabel("Amount: " + NumberFormat.getCurrencyInstance().format(d.getAmount()));
+										employeeName = new JLabel("Employee Name: " + d.getEmployeeName());
+										
+										 
+										CustomerTransactionTable thTable = new CustomerTransactionTable();
+										thTable.updateTable(d.getItemList());
+										
+										thTable.setBounds(20, 150, 570, 240);
+										
+										customerName.setBounds		(20, 10, 250, 20);		transactionDate.setBounds	(380, 10, 250, 20);	 		
+										address.setBounds			(20, 40, 250, 20);		status.setBounds			(380, 40, 250, 20);		
+										expectedTime.setBounds		(20, 70, 250, 20); 		actualTime.setBounds		(380, 70, 250, 20);
+										employeeName.setBounds		(20, 100, 250, 20);		amountSpent.setBounds		(380, 100, 250, 20);					
+										
+										frame.add(customerName);
+										frame.add(address);
+										frame.add(status);
+										frame.add(expectedTime);
+										frame.add(actualTime);
+										frame.add(transactionDate);
+										frame.add(amountSpent);
+										frame.add(employeeName);
+										frame.add(thTable);
+							
+										frame.setVisible(true);
+									}
+								}
+							
+							if ( resultFound == false) 
+								JOptionPane.showMessageDialog(mainPanel, "Delivery record not found!", "Search for a record", JOptionPane.ERROR_MESSAGE);
+						}
+					}
+				});		
+
 				JComboBox<String> filterComboBox;
 				String[] filteringCriteria = new String[] { "<None>", "STATUS - DELIVERED", "STATUS - LATE" };
 
-				panelLabel = new JLabel("<html><h1>All Deliveries</h1></html>");
 				filterLabel = new JLabel("FILTER: ");
 				filterComboBox = new JComboBox<>(filteringCriteria);
 
 				DeliveryTable table = new DeliveryTable(mainPanel);
+				table.setBackground(Color.WHITE);
 
-				filterLabel.setBounds(190, 50, 70, 20);
-				filterComboBox.setBounds(240, 50, 150, 20);
-				panelLabel.setBounds(200, 5, 200, 30);
-				table.setBounds(10, 100, 560, 470);
-				table.setBorder(BorderFactory.createEtchedBorder());
+				filterLabel.setBounds(190, 100, 70, 20);
+				filterComboBox.setBounds(240, 100, 150, 20);
+				panelLabel.setBounds(200, 0, 200, 30);
+				table.setBounds(10, 150, 560, 460);
 
 				filterComboBox.addItemListener(new filter_IL(table));
 				
@@ -279,8 +575,9 @@ public class TaskBar extends JPanel {
 
 				dhFrame.add(filterLabel);
 				dhFrame.add(filterComboBox);
-				dhFrame.add(panelLabel);
+				dhFrame.add(redPanel);
 				dhFrame.add(table);
+				dhFrame.add(search);
 				
 				dhFrame.setVisible(true);
 			}
@@ -550,7 +847,14 @@ public class TaskBar extends JPanel {
 			int h = now.get(Calendar.HOUR_OF_DAY);
 			int m = now.get(Calendar.MINUTE);
 			int s = now.get(Calendar.SECOND);
-			time.setText("TIME: " + h + ":" + m + ":" + s);
+			if (m < 10 && s < 10)
+				time.setText("TIME: " + h + ":0" + m + ":0" + s);
+			else if (m < 10)
+				time.setText("TIME: " + h + ":0" + m + ":" + s);
+			else if (s < 10)
+				time.setText("TIME: " + h + ":" + m + ":0" + s);
+			else
+				time.setText("TIME: " + h + ":" + m + ":" + s);
 
 		}
 	}
@@ -598,22 +902,72 @@ public class TaskBar extends JPanel {
 		return total;
 	}
 	
-	//Not in use
-	public String generateNewStaffID() {
-		String id = "" + (Staffs.size());
-		System.out.println("ID: " + id);
-
-		for (int i = 0; i < 8; i++) {
-			if ( id.length() < 8) {
-				id = "0" + id;
-			}
-		}
-
-		return id;
+	public double getAverageDailySales(double value) {
+		int days = iv.getTransactionHistory().size();
+		
+		return value/days;
 	}
-
+	
+	public double getNetSales(double value) {
+		return (value / 107) * 100;
+	}
+	
+	public double getGstAmount(double value) {
+		return (value / 107) * 7;
+	}
+	
 	public String parseDateFormal(Date d) {
 		return new SimpleDateFormat("dd/MM/yyyy hh:mm a").format(d);
 	}
+	
+	public String parseTimeString(String d) {
+		try {
+			Date temp = new SimpleDateFormat("hh:mm").parse(d);
+			return new SimpleDateFormat("hh:mm a").format(temp);
+		} catch (ParseException | NullPointerException e) {
+			return "<Waiting for Pickup>";
+		}
+	}
 
+	//yet to test
+	public ArrayList<Grocery> consolidateArrayList(ArrayList<TransactionHistory> input) {
+		ArrayList<Grocery> consolidatedList = new ArrayList<>();
+
+		for ( TransactionHistory th : input) {
+			ArrayList<Object> tempCustTransaction = (ArrayList<Object>) th.getArray().get(0);
+			if ( consolidatedList.size() == 0 ) {
+				//**ASSUMPTION**//
+				//If the list is empty, then the first order of the TH will be added automatically
+					for ( Object o : tempCustTransaction) {
+						System.out.println(o.toString());
+						System.out.println(o.getClass());
+						Map<String, Object> t = (Map<String, Object>) o;
+						Grocery a = new Grocery((String)t.get("name"), (long)t.get("quantity"), (double)t.get("cost"));
+						consolidatedList.add(a);
+					}	
+			} else {
+				Grocery tempMemoryEatingObject = new Grocery();
+				for ( Object o : tempCustTransaction) {
+					boolean isUnique = false;
+					Map<String, Object> t = (Map<String, Object>) o;
+					
+					for (Grocery b : consolidatedList) {
+						if(b.getName().equals(t.get("name"))) {
+								b.setQuantity(b.getQuantity()+(long)t.get("quantity"));
+								isUnique = false;
+								break;
+						} else {
+							tempMemoryEatingObject = new Grocery((String)t.get("name"), (long)t.get("quantity"), (double)t.get("cost"));
+							isUnique = true;
+						}
+					}
+					//add record as a new grocery object
+					if (isUnique == true) {
+						consolidatedList.add(tempMemoryEatingObject);
+					}
+				}	
+			}
+		}
+		return consolidatedList;
+	}
 }

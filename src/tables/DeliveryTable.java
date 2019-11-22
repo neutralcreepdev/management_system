@@ -58,9 +58,10 @@ public class DeliveryTable extends JPanel implements MouseListener {
 		currDelivery = new Delivery();
 
 		scrollPane = new JScrollPane(table);
-		table.setPreferredScrollableViewportSize(new Dimension(500, 420));
-		table.setBackground(new Color(0xdaddd8));
+		//table.setPreferredScrollableViewportSize(new Dimension(500, 420));
+		table.setAutoscrolls(true);
 		scrollPane.getViewport().setBackground(new Color(0xf2f5f6));
+		
 		
 		scrollPane.setBorder(BorderFactory.createLineBorder(Color.BLACK, 1));
 		table.setVisible(true);
@@ -72,6 +73,7 @@ public class DeliveryTable extends JPanel implements MouseListener {
 		redRenderer.setBackground(Color.red);
 
 		table.getColumn("Customer Name").setCellRenderer( middleRenderer );
+		table.getColumn("Transaction ID").setCellRenderer( middleRenderer );
 		table.getColumn("Delivery Date").setCellRenderer( middleRenderer );
 		table.getColumn("Status").setCellRenderer( middleRenderer );
 		table.getColumn("Employee Name").setCellRenderer( middleRenderer);
@@ -240,8 +242,8 @@ public class DeliveryTable extends JPanel implements MouseListener {
 	class ModelData extends AbstractTableModel {
 
 
-		String colNames[] = {  "Delivery Date", "Customer Name", "Status", "Employee Name"};
-		Class<?> colClasses[] = { String.class, String.class, String.class, String.class };
+		String colNames[] = {  "Delivery Date", "Transaction ID", "Customer Name", "Status", "Employee Name"};
+		Class<?> colClasses[] = { String.class, String.class, String.class, String.class, String.class };
 
 		// Constructor
 		public ModelData() {
@@ -267,17 +269,11 @@ public class DeliveryTable extends JPanel implements MouseListener {
 			
 			switch(columnIndex) {
 				case 0: return data.get(rowIndex).getExpectedDate();
-				case 1: return data.get(rowIndex).getCustomerName(); 
-				case 2: 
-					
-					/*if( data.get(rowIndex).getDeliveryStatus().contains("Late")) {
-						table.getColumn("Status").setCellRenderer(redRenderer);
-						return data.get(rowIndex).getDeliveryStatus();
-					} else 
-						table.getColumn("Status").setCellRenderer(middleRenderer);*/
-						return data.get(rowIndex).getDeliveryStatus();
-				case 3: return data.get(rowIndex).getEmployeeName();
-					//Leave until Monday 04112019 to settle the testing and integration with the other apps
+				case 1: return data.get(rowIndex).getTransactionID();
+				case 2: return data.get(rowIndex).getCustomerName(); 
+				case 3: return data.get(rowIndex).getDeliveryStatus();
+				case 4: return data.get(rowIndex).getEmployeeName();
+
 				default: return null;
 			}
 			

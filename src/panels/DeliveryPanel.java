@@ -31,7 +31,7 @@ public class DeliveryPanel extends JPanel {
 		setLayout(null);
 		setBounds(50, 100, 610, 600);
 		setBorder(BorderFactory.createEtchedBorder());
-		setBackground(new Color(0xf2f5f6));
+		setBackground(Color.white);
 		
 		panelLabel = new JLabel("<html><h2>Pending Deliveries</h2></html>");
 		filterLabel = new JLabel("FILTER: ");
@@ -41,6 +41,7 @@ public class DeliveryPanel extends JPanel {
 		filterLabel.setBounds(190, 100, 70, 20);
 		filterComboBox.setBounds(240, 100, 150, 20);
 		table.setBounds(50, 130, 510, 450);
+		table.setBackground(Color.white);
 	
 		add(panelLabel);
 		add(filterLabel);
